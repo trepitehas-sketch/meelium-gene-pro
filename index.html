@@ -1,0 +1,1541 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meelium Gene Pro v2.3 — mp3 → Suno analüüsipakett</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+:root{
+  --ink:#0E1116; --panel:#161B22; --line:#2A313B; --line2:#21262E;
+  --text:#E8E4DA; --muted:#8B93A1; --dim:#5A6270;
+  --amber:#F5A94B; --coral:#E07B54; --ice:#5CC8FF; --mint:#5FBF98; --violet:#8F7FD8;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+  --disp:'Space Grotesk',system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ink);color:var(--text);font-family:var(--disp);line-height:1.5}
+.wrap{max-width:960px;margin:0 auto;padding:40px 20px 80px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.15em;color:var(--muted);text-transform:uppercase}
+.series{font-family:var(--mono);font-size:12px;letter-spacing:.25em;color:var(--amber);text-transform:uppercase}
+h1{font-size:clamp(30px,5vw,44px);font-weight:700;margin:0;line-height:1.05}
+h1 span{color:var(--amber)}
+.lead{color:var(--muted);margin-top:12px;max-width:620px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+.panel.hero{border-color:var(--amber)}
+.drop{border:1.5px dashed var(--line);background:var(--panel);border-radius:14px;padding:28px 24px;text-align:center;cursor:pointer;transition:all .18s ease;margin-bottom:20px}
+.drop.drag{border-color:var(--amber);background:rgba(245,169,75,.06)}
+.drop .hint{font-family:var(--mono);font-size:13px;color:var(--muted)}
+.bar{height:4px;background:var(--line);border-radius:2px;overflow:hidden;max-width:420px;margin:16px auto 0}
+.bar>div{height:100%;width:0;background:var(--amber);transition:width .2s}
+.status{font-family:var(--mono);font-size:12px;color:var(--amber);margin-top:10px;animation:pulse 1.4s infinite}
+.err{font-family:var(--mono);font-size:12px;color:var(--coral);margin-top:14px}
+@keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.tabs button{background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:8px;padding:8px 14px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit}
+.tabs button.on{background:var(--amber);color:var(--ink);border-color:var(--amber);font-weight:700}
+.transport{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 14px;margin-bottom:20px}
+.transport .tbtn{background:var(--amber);color:var(--ink);border:none;border-radius:8px;width:38px;height:32px;font-size:15px;cursor:pointer;font-weight:700}
+.transport .ttime{font-family:var(--mono);font-size:13px;color:var(--amber);min-width:96px}
+.transport .tname{font-family:var(--mono);font-size:12px;color:var(--muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.metrics{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.metric{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 18px;flex:1 1 150px}
+.metric .v{font-size:21px;font-weight:700;margin-top:4px;color:var(--amber)}
+.metric .s{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:3px}
+.timeaxis{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:6px}
+.segrow{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line2);flex-wrap:wrap}
+.segrow:first-child{border-top:none}
+.dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.segtime{font-family:var(--mono);font-size:13px;color:var(--muted);width:94px;flex-shrink:0}
+.seginfo{font-family:var(--mono);font-size:11px;color:var(--muted);flex:1 1 120px}
+.ebar{flex:1 1 70px;height:6px;background:var(--ink);border-radius:3px;overflow:hidden;min-width:56px}
+.ebar>div{height:100%;opacity:.8}
+.mini{background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:4px 9px;font-size:12px;cursor:pointer;font-family:inherit}
+.mini:hover{color:var(--amber);border-color:var(--amber)}
+select,input[type=text],textarea{background:var(--ink);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px;font-family:inherit}
+select:focus-visible,input:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+textarea{width:100%;line-height:1.5;resize:vertical}
+pre.out{font-family:var(--mono);font-size:14px;line-height:1.7;background:var(--ink);border:1px solid var(--line);border-radius:10px;padding:16px;white-space:pre-wrap;margin:0;min-height:24px}
+.btn{background:var(--amber);color:var(--ink);border:none;border-radius:8px;padding:10px 18px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.ghost{background:transparent;color:var(--amber);border:1px solid var(--amber);font-weight:500}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.controls{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.controls .eyebrow{flex:1}
+label.chk{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px;cursor:pointer}
+.grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:14px}
+.grid4 .cell{display:flex;flex-direction:column;gap:5px}
+.grid4 .cell span{font-size:12px;color:var(--muted)}
+.note{font-size:12px;color:var(--muted);margin-top:8px}
+.desc{font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.55}
+.legend{font-size:12px;color:var(--muted);margin-bottom:10px}
+footer{margin-top:40px;font-family:var(--mono);font-size:11px;color:var(--dim);line-height:1.7}
+.hidden{display:none}
+svg{width:100%;height:auto;display:block}
+.bhandle{cursor:ew-resize}
+.chordrow{display:flex;gap:12px;padding:8px 0;border-top:1px solid var(--line2);flex-wrap:wrap;align-items:baseline}
+.chordrow:first-child{border-top:none}
+.chordtag{font-family:var(--mono);font-size:12px;width:168px;flex-shrink:0}
+.chordseq{font-family:var(--mono);font-size:13px;flex:1 1 200px}
+.chordkey{font-family:var(--mono);font-size:11px;color:var(--violet)}
+.prog{font-size:24px;font-weight:700;color:var(--amber);font-family:var(--mono)}
+.progsub{font-family:var(--mono);font-size:14px;color:var(--muted);margin-top:6px}
+.step{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--amber);text-transform:uppercase;margin:16px 0 6px}
+table.cmp{width:100%;border-collapse:collapse;font-size:13px}
+table.cmp th,table.cmp td{padding:7px 10px;border-bottom:1px solid var(--line2);text-align:left}
+table.cmp th{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
+table.cmp td.v{font-family:var(--mono)}
+table.cmp td.warn{color:var(--coral)}
+table.cmp td.ok{color:var(--mint)}
+.trkrow button{margin-left:6px}
+.libitem{border-top:1px solid var(--line2);padding:10px 0}
+.libitem:first-child{border-top:none}
+.libmeta{font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:6px}
+.langbtn{position:absolute;top:0;right:0;background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;font-family:var(--mono)}
+header{position:relative}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header style="margin-bottom:30px">
+  <button class="langbtn" id="langBtn">EN</button>
+  <div class="series" style="margin-bottom:10px">Meelium · Gene Pro · v2.3</div>
+  <h1>Meelium Gene <span>Pro</span></h1>
+  <p class="lead" id="i-lead">Täielik loo lahkamine ja Suno paketikoostaja: struktuur, harmoonia, dünaamika, spekter,
+  stereo, meloodiakontuur — nüüd koos pleieri, lohistatavate piiride, A/B võrdluse, albumirežiimi,
+  MIDI-ekspordi ja promptide raamatukoguga. Kõik selles brauseriaknas, faili kuhugi laadimata.</p>
+</header>
+
+<div class="drop" id="drop" role="button" tabindex="0">
+  <input type="file" id="file" accept="audio/*,.mp3,.wav,.m4a,.ogg,.flac" multiple style="display:none">
+  <div class="hint" id="dropHint">Lohista siia mp3 / wav / m4a (võib mitu korraga — albumirežiim) — või klõpsa</div>
+  <div id="progWrap" class="hidden">
+    <div class="bar"><div id="progBar"></div></div>
+    <div class="status" id="progTxt">Analüüsin…</div>
+  </div>
+  <div class="err hidden" id="errTxt"></div>
+</div>
+
+<div id="results" class="hidden">
+
+  <nav class="tabs" id="tabs">
+    <button data-tab="overview" class="on" id="i-tab-ov">Ülevaade</button>
+    <button data-tab="structure" id="i-tab-st">Struktuur</button>
+    <button data-tab="harmony" id="i-tab-ha">Harmoonia</button>
+    <button data-tab="sound" id="i-tab-so">Heli &amp; dünaamika</button>
+    <button data-tab="compare" id="i-tab-cp">Võrdlus / album</button>
+    <button data-tab="suno" id="i-tab-su">Suno pakett</button>
+  </nav>
+
+  <div class="transport">
+    <button class="tbtn" id="playBtn" title="Esita / paus">▶</button>
+    <span class="ttime" id="tTime">0:00 / 0:00</span>
+    <label class="chk"><input type="checkbox" id="loopSeg"> <span id="i-loop">korda sektsiooni</span></label>
+    <span class="tname" id="tName"></span>
+  </div>
+
+  <!-- ÜLEVAADE -->
+  <section id="tab-overview">
+    <div class="metrics" id="metrics1"></div>
+    <div class="metrics" id="metrics2"></div>
+    <div class="panel">
+      <div class="eyebrow" style="margin-bottom:6px" id="i-energy-h">Energiaprofiil ja sektsioonid</div>
+      <div class="note" style="margin:0 0 10px" id="i-energy-n">Klõps graafikul hüppab sinna; klõps alumisel värviribal mängib sektsiooni.</div>
+      <div id="energyChart1"></div>
+      <div class="timeaxis"><span>0:00</span><span id="durLabel1"></span></div>
+    </div>
+
+  </section>
+
+  <!-- STRUKTUUR -->
+  <section id="tab-structure" class="hidden">
+    <div class="panel">
+      <div class="eyebrow" style="margin-bottom:4px" id="i-struct-h">Sektsioonid — rollid, piirid, poolitamine</div>
+      <div class="desc" id="i-struct-d">Lohista graafikul piirijooni (käepidemed) sektsioonide nihutamiseks. ▶ mängib sektsiooni,
+      ✂ poolitab keskelt, ⇤ liidab eelmisega. Automaattuvastus on heuristiline; kõrv on lõplik kohtunik.</div>
+      <div id="energyChart2"></div>
+      <div id="segList" style="margin-top:14px"></div>
+    </div>
+  </section>
+
+  <!-- HARMOONIA -->
+  <section id="tab-harmony" class="hidden">
+    <div class="panel">
+      <div class="eyebrow" style="margin-bottom:12px" id="i-chords-h">Akordijärgnevus ajas (maj/min kolmkõlad)</div>
+      <div id="chordChart"></div>
+      <div class="timeaxis"><span>0:00</span><span id="durLabel2"></span></div>
+      <div class="row"><button class="btn ghost" id="midiBtn" >⬇ MIDI-eksport (akordid .mid)</button></div>
+    </div>
+    <div class="panel" id="progPanel"></div>
+    <div class="panel">
+      <div class="eyebrow" style="margin-bottom:6px" id="i-melody-h">Meloodiakontuur (hinnang)</div>
+      <div class="note" style="margin:0 0 10px" id="i-melody-n">Domineeriv helikõrgus 200–1100 Hz vahemikus — kontuuri kuju, mitte täpne noodistus.</div>
+      <div id="melodyChart"></div>
+    </div>
+    <div class="panel">
+      <div class="eyebrow" style="margin-bottom:12px" id="i-segch-h">Akordid, helistikud ja kontuur sektsioonide kaupa</div>
+      <div id="segChordList"></div>
+      <div class="note" id="i-segch-n">Kui sektsiooni helistik erineb loo omast, on tegu modulatsiooniga — see kuvatakse lillalt.
+      Tuvastus on chroma-põhine; keerukamad akordid taandatakse lähimaks kolmkõlaks.</div>
+    </div>
+  </section>
+
+  <!-- HELI -->
+  <section id="tab-sound" class="hidden">
+    <div class="panel">
+      <div class="eyebrow" style="margin-bottom:4px" id="i-loud-h">Valjuskõver (400 ms RMS) + voogedastuse sihtjooned</div>
+      <div class="legend" id="loudLegend"></div>
+      <div id="loudChart"></div>
+      <div class="note" id="i-loud-n">Sihtjooned: Spotify ≈ −14, Apple Music ≈ −16 (LUFS; siinne mõõt on RMS dBFS ≈ LUFS hinnang).
+      Kui RMS on sihtjoontest kõrgemal, normaliseerib platvorm loo vaiksemaks.</div>
+    </div>
+    <div class="panel">
+      <div class="eyebrow" style="margin-bottom:4px" id="i-band-h">Spektraalbalanss ajas</div>
+      <div class="legend" id="bandLegend"></div>
+      <div id="bandChart"></div>
+    </div>
+    <div class="panel">
+      <div class="eyebrow" style="margin-bottom:10px" id="i-stereo-h">Stereopilt</div>
+      <div id="stereoInfo" style="font-size:14px;line-height:1.7"></div>
+    </div>
+  </section>
+
+  <!-- VÕRDLUS / ALBUM -->
+  <section id="tab-compare" class="hidden">
+    <div class="panel">
+      <div class="eyebrow" style="margin-bottom:6px" id="i-album-h">Laaditud lood (albumirežiim)</div>
+      <div class="desc" id="i-album-d">Lisa faile juurde ülemise tsooni kaudu (mitu korraga lubatud). „Ava" teeb loo aktiivseks —
+      kõik teised sakid näitavad siis seda. Kollasega on märgitud lood, mille valjus erineb albumi keskmisest üle 2 dB.</div>
+      <div style="overflow-x:auto"><table class="cmp" id="trackTable"></table></div>
+    </div>
+    <div class="panel">
+      <div class="eyebrow" style="margin-bottom:6px" id="i-ab-h">A/B võrdlus</div>
+      <div class="desc" id="i-ab-d">Vali kaks lugu — näiteks originaal ja Suno väljund — ja võrdle mõõdikuid kõrvuti.</div>
+      <div class="row" style="margin-top:0;margin-bottom:12px">
+        <select id="cmpA"></select>
+        <span style="color:var(--muted)">vs</span>
+        <select id="cmpB"></select>
+      </div>
+      <div style="overflow-x:auto"><table class="cmp" id="cmpTable"></table></div>
+    </div>
+  </section>
+
+  <!-- SUNO PAKETT -->
+  <section id="tab-suno" class="hidden">
+
+    <div class="panel hero">
+      <div class="eyebrow" style="color:var(--amber);margin-bottom:6px" id="i-full-h">Täisprompt — sarnase loo retsept</div>
+      <div class="desc" id="i-full-d">Analüüs mõõdab tempot, helistikku, akorde ja karakterit — aga žanri, instrumente ja
+      vokaali kuuleb ainult sinu kõrv. Vali rippmenüüst (valik lisandub tekstivälja, mitu valikut kombineeritavad)
+      või kirjuta oma. Žanr käib esimesena, sest Suno kaalub prompti algust kõige tugevamalt.</div>
+      <div class="grid4" id="manualGrid"></div>
+      <pre class="out" id="fullPromptOut"></pre>
+      <div class="row">
+        <button class="btn" id="copyFull">Kopeeri täisprompt</button>
+      </div>
+      <div class="note" id="i-full-n">Kleebi Suno <em>style</em> väljale. Struktuur (koos akordidega) läheb eraldi lüürikaväljale — vt allpool.</div>
+    </div>
+
+    <div class="panel">
+      <div class="eyebrow" id="i-dna-h">MEELIUM DNA — väldi generilist lõksu</div>
+      <div class="desc" id="i-dna-d" style="margin:6px 0 12px">Loo kontrollitud üllatus: ootamatu kultuuriline ristamine, füüsiline heliruum, ebatavaline struktuur ja inimlik ebatäiuslikkus.</div>
+      <div class="controls">
+        <select id="dnaLevel" aria-label="Omanäolisuse tase">
+          <option value="off">Väljas</option><option value="balanced">Tasakaalustatud</option>
+          <option value="bold" selected>Julge</option><option value="radical">MEELIUM Experimental</option>
+        </select>
+        <button class="btn ghost" id="generateDna">Genereeri uus DNA</button>
+      </div>
+      <pre class="out" id="dnaOut">— genereeri loo loominguline DNA —</pre>
+      <label class="cell" style="margin-top:10px"><span id="i-dna-avoid">Väldi lisaks / Avoid</span>
+        <input id="dnaAvoid" type="text" placeholder="nt generic pop structure, mainstream synth, perfect quantization">
+      </label>
+      <div class="note" id="i-dna-n">DNA lisatakse automaatselt Suno täisprompti ja ChatGPT laulusõnade konteksti. Lukustamiseks jäta sama DNA alles; uue variandi saamiseks genereeri uuesti.</div>
+    </div>
+
+    <div class="panel">
+      <div class="eyebrow" style="margin-bottom:12px" id="i-style-h">Stiiliprompt — vali komponendid</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px 18px;margin-bottom:14px" id="incChecks"></div>
+      <pre class="out" id="styleOut"></pre>
+      <div class="row"><button class="btn" id="copyStyle">Kopeeri stiiliprompt</button></div>
+    </div>
+
+    <div class="panel">
+      <div class="controls">
+        <div class="eyebrow" id="i-structout-h">Struktuur lüürikaväljale</div>
+        <select id="genreSel"></select>
+        <label class="chk"><input type="checkbox" id="ckChords" checked> <span id="i-ck-ch">akordid</span></label>
+        <label class="chk"><input type="checkbox" id="ckEmotions" checked> <span id="i-ck-em">emotsioonid</span></label>
+        <label class="chk"><input type="checkbox" id="ckDesc"> <span id="i-ck-de">kirjeldused</span></label>
+        <label class="chk"><input type="checkbox" id="ckTimes"> <span id="i-ck-ti">ajatemplid</span></label>
+      </div>
+      <pre class="out" id="structOut"></pre>
+      <div class="row"><button class="btn" id="copyStruct">Kopeeri struktuur</button></div>
+    </div>
+
+    <div class="panel">
+      <div class="eyebrow" style="margin-bottom:6px" id="i-lyr-h">Laulusõnad — genereeri struktuuri sisse ChatGPT abil</div>
+      <div class="desc" id="i-lyr-d">Kahe sammuga: ① tööriist koostab valmis prompti (teema + struktuur + kestused + emotsioonid) —
+      nupp kopeerib prompti ja avab ChatGPT; ② kleebi ChatGPT vastus siia tagasi ja tööriist põimib sõnad automaatselt
+      täissiltide alla.</div>
+      <div class="step" id="i-lyr-s1">① Kirjelda sisu ja kopeeri prompt</div>
+      <textarea id="lyricsPrompt" rows="4" placeholder="nt: Lugu inimesest, kes lahkub linnast mere äärde; melanhoolne aga lootusrikas; kujundid — udu, majakas, tühjad tänavad; refrään kordab mõtet 'meri mäletab'"></textarea>
+      <div class="row">
+        <select id="lyricsLang">
+          <option value="eesti keel">Eesti keeles</option>
+          <option value="inglise keel">Inglise keeles</option>
+          <option value="eesti ja inglise segamini (salmid eesti, refrään inglise)">Segakeelne (salmid ET, refrään EN)</option>
+        </select>
+        <button class="btn" id="copyLyricsPrompt" disabled>Kopeeri prompt ja ava ChatGPT</button>
+      </div>
+      <div class="step" id="i-lyr-s2">② Kleebi ChatGPT vastus ja põimi</div>
+      <textarea id="lyricsResp" rows="6" placeholder="Kleebi siia ChatGPT vastus (sildid + read)…"></textarea>
+      <div class="row"><button class="btn ghost" id="mergeBtn" disabled>Põimi sõnad struktuuri sisse</button></div>
+      <div id="mergedWrap" class="hidden">
+        <pre class="out" id="mergedOut" style="margin-top:14px"></pre>
+        <div class="row"><button class="btn" id="copyMerged">Kopeeri sõnad lüürikaväljale</button></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="controls">
+        <div class="eyebrow" id="i-lib-h">Promptide raamatukogu</div>
+        <button class="btn ghost" id="saveLib">＋ Salvesta praegune pakett</button>
+      </div>
+      <div id="libNote" class="note hidden" style="margin-bottom:10px"></div>
+      <div id="libList"></div>
+      <div class="row">
+        <button class="btn ghost" id="expJson">⬇ Raport (JSON)</button>
+        <button class="btn ghost" id="expTxt">⬇ Raport (tekst)</button>
+      </div>
+    </div>
+
+  </section>
+</div>
+
+<footer id="i-footer">
+Analüüs toimub täielikult brauseris — faili ei laadita kuhugi üles. Kõik väärtused on
+spektraalheuristika hinnangud, mitte täppis-MIR: tempo ±2 BPM, helistik ja akordid chroma-põhised,
+valjus RMS dBFS (≈ LUFS), taktimõõt aktsendiperioodi hinnang, meloodiakontuur ligikaudne.
+· Meelium Gene Pro v2.3
+</footer>
+</div>
+
+<script>
+"use strict";
+/* ================= FFT & abifunktsioonid ================= */
+function fft(re, im) {
+  const n = re.length;
+  for (let i = 1, j = 0; i < n; i++) {
+    let bit = n >> 1;
+    for (; j & bit; bit >>= 1) j ^= bit;
+    j ^= bit;
+    if (i < j) { let t=re[i];re[i]=re[j];re[j]=t; t=im[i];im[i]=im[j];im[j]=t; }
+  }
+  for (let len = 2; len <= n; len <<= 1) {
+    const ang = -2 * Math.PI / len, wr = Math.cos(ang), wi = Math.sin(ang);
+    for (let i = 0; i < n; i += len) {
+      let cwr = 1, cwi = 0;
+      for (let k = 0; k < len / 2; k++) {
+        const ur = re[i+k], ui = im[i+k];
+        const vr = re[i+k+len/2]*cwr - im[i+k+len/2]*cwi;
+        const vi = re[i+k+len/2]*cwi + im[i+k+len/2]*cwr;
+        re[i+k]=ur+vr; im[i+k]=ui+vi;
+        re[i+k+len/2]=ur-vr; im[i+k+len/2]=ui-vi;
+        const nwr = cwr*wr - cwi*wi;
+        cwi = cwr*wi + cwi*wr; cwr = nwr;
+      }
+    }
+  }
+}
+const KR_MAJ=[6.35,2.23,3.48,2.33,4.38,4.09,2.52,5.19,2.39,3.66,2.29,2.88];
+const KR_MIN=[6.33,2.68,3.52,5.38,2.60,3.53,2.54,4.75,3.98,2.69,3.34,3.17];
+const NOTES=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+function pearson(a,b){const n=a.length;let ma=0,mb=0;for(let i=0;i<n;i++){ma+=a[i];mb+=b[i]}ma/=n;mb/=n;
+let num=0,da=0,db=0;for(let i=0;i<n;i++){num+=(a[i]-ma)*(b[i]-mb);da+=(a[i]-ma)**2;db+=(b[i]-mb)**2}
+return num/(Math.sqrt(da*db)+1e-12)}
+function cosineSim(a,b){let n=0,da=0,db=0;for(let i=0;i<a.length;i++){n+=a[i]*b[i];da+=a[i]*a[i];db+=b[i]*b[i]}
+return n/(Math.sqrt(da)*Math.sqrt(db)+1e-12)}
+const yieldUI=()=>new Promise(r=>setTimeout(r,0));
+const fmtTime=s=>`${Math.floor(s/60)}:${String(Math.floor(Math.max(0,s)%60)).padStart(2,"0")}`;
+function keyFromChroma(vec){
+  let name="?",score=-Infinity,root=0,minor=false;
+  for(let rot=0;rot<12;rot++){
+    const r=[];for(let p=0;p<12;p++)r.push(vec[(p+rot)%12]);
+    const sM=pearson(r,KR_MAJ),sm=pearson(r,KR_MIN);
+    if(sM>score){score=sM;name=NOTES[rot]+" major";root=rot;minor=false}
+    if(sm>score){score=sm;name=NOTES[rot]+" minor";root=rot;minor=true}}
+  return{name,root,minor,score};
+}
+const CHORD_TEMPLATES=[];
+for(let r=0;r<12;r++){
+  const maj=new Float32Array(12),min=new Float32Array(12);
+  maj[r]=1;maj[(r+4)%12]=.9;maj[(r+7)%12]=.85;
+  min[r]=1;min[(r+3)%12]=.9;min[(r+7)%12]=.85;
+  CHORD_TEMPLATES.push({root:r,minor:false,v:maj,label:NOTES[r]});
+  CHORD_TEMPLATES.push({root:r,minor:true,v:min,label:NOTES[r]+"m"});
+}
+function romanNumeral(cr,cm,kr,km){
+  const deg=(cr-kr+12)%12;
+  const MAJ={0:"I",2:"II",4:"III",5:"IV",7:"V",9:"VI",11:"VII"};
+  const MIN={0:"I",2:"II",3:"III",5:"IV",7:"V",8:"VI",10:"VII"};
+  const base=(km?MIN:MAJ)[deg];
+  if(!base)return null;
+  return cm?base.toLowerCase():base;
+}
+
+/* ================= PÕHIANALÜÜS ================= */
+async function analyzeBuffer(audioBuffer,onProgress){
+  const srcRate=audioBuffer.sampleRate;
+  const step=Math.max(1,Math.round(srcRate/22050));
+  const sr=srcRate/step;
+  const isStereo=audioBuffer.numberOfChannels>=2;
+  const chL=audioBuffer.getChannelData(0);
+  const chR=isStereo?audioBuffer.getChannelData(1):chL;
+  const len=Math.floor(audioBuffer.length/step);
+  const mono=new Float32Array(len), side=new Float32Array(len);
+  for(let i=0;i<len;i++){const l=chL[i*step],r=chR[i*step];mono[i]=(l+r)/2;side[i]=(l-r)/2}
+
+  let midE=0,sideE=0,midBassE=0,sideBassE=0,lpM=0,lpS=0;
+  const alpha=Math.exp(-2*Math.PI*120/sr);
+  for(let i=0;i<len;i++){
+    midE+=mono[i]*mono[i];sideE+=side[i]*side[i];
+    lpM=alpha*lpM+(1-alpha)*mono[i];lpS=alpha*lpS+(1-alpha)*side[i];
+    midBassE+=lpM*lpM;sideBassE+=lpS*lpS}
+  const stereoWidth=isStereo?Math.sqrt(sideE/(midE+1e-12)):0;
+  const bassMonoRatio=isStereo?Math.sqrt(sideBassE/(midBassE+1e-12)):0;
+
+  let peak=0,sumSq=0;
+  for(let i=0;i<len;i++){const a=Math.abs(mono[i]);if(a>peak)peak=a;sumSq+=mono[i]*mono[i]}
+  const rmsDb=20*Math.log10(Math.sqrt(sumSq/len)+1e-12);
+  const peakDb=20*Math.log10(peak+1e-12);
+  const crest=peakDb-rmsDb;
+  const lwin=Math.round(.4*sr),lhop=Math.round(.2*sr);
+  const loudCurve=[];
+  for(let o=0;o+lwin<len;o+=lhop){let e=0;for(let i=o;i<o+lwin;i++)e+=mono[i]*mono[i];
+  loudCurve.push(20*Math.log10(Math.sqrt(e/lwin)+1e-12))}
+  const sorted=loudCurve.filter(d=>d>-70).sort((a,b)=>a-b);
+  const pctF=p=>sorted[Math.min(sorted.length-1,Math.floor(p*sorted.length))]??-70;
+  const dr=pctF(.95)-pctF(.10);
+
+  onProgress(.06);await yieldUI();
+
+  const N=1024,HOP=512;
+  const nFrames=Math.max(1,Math.floor((len-N)/HOP));
+  const hann=new Float32Array(N);
+  for(let i=0;i<N;i++)hann[i]=.5*(1-Math.cos(2*Math.PI*i/(N-1)));
+  const rmsArr=new Float32Array(nFrames),fluxArr=new Float32Array(nFrames),
+        centArr=new Float32Array(nFrames),bassArr=new Float32Array(nFrames),
+        midArr=new Float32Array(nFrames),highArr=new Float32Array(nFrames),
+        melArr=new Float32Array(nFrames);
+  const chromaArr=[];
+  let prevMag=new Float32Array(N/2);
+  const binPC=new Int8Array(N/2).fill(-1), binBand=new Int8Array(N/2);
+  let melLo=Math.ceil(200*N/sr), melHi=Math.floor(1100*N/sr);
+  for(let k=1;k<N/2;k++){
+    const f=k*sr/N;
+    if(f>=60&&f<=2500){const midi=69+12*Math.log2(f/440);binPC[k]=((Math.round(midi)%12)+12)%12}
+    binBand[k]=f<250?0:f<4000?1:2}
+  const re=new Float32Array(N),im=new Float32Array(N);
+  for(let fIdx=0;fIdx<nFrames;fIdx++){
+    const off=fIdx*HOP;let energy=0;
+    for(let i=0;i<N;i++){const v=mono[off+i];energy+=v*v;re[i]=v*hann[i];im[i]=0}
+    rmsArr[fIdx]=Math.sqrt(energy/N);
+    fft(re,im);
+    let flux=0,cN=0,cD=0,bE=0,mE=0,hE=0,melBest=0,melBin=-1;
+    const chroma=new Float32Array(12);
+    for(let k=1;k<N/2;k++){
+      const mag=Math.sqrt(re[k]*re[k]+im[k]*im[k]);
+      const d=mag-prevMag[k];if(d>0)flux+=d;
+      const f=k*sr/N;cN+=f*mag;cD+=mag;prevMag[k]=mag;
+      if(binPC[k]>=0)chroma[binPC[k]]+=mag;
+      if(binBand[k]===0)bE+=mag*mag;else if(binBand[k]===1)mE+=mag*mag;else hE+=mag*mag;
+      if(k>=melLo&&k<=melHi&&mag>melBest){melBest=mag;melBin=k}}
+    fluxArr[fIdx]=flux;centArr[fIdx]=cD>1e-9?cN/cD:0;
+    bassArr[fIdx]=bE;midArr[fIdx]=mE;highArr[fIdx]=hE;
+    melArr[fIdx]=melBin>0?69+12*Math.log2((melBin*sr/N)/440):0;
+    chromaArr.push(chroma);
+    if(fIdx%400===0){onProgress(.06+.6*(fIdx/nFrames));await yieldUI()}
+  }
+
+  const hopTime=HOP/sr;
+  const win=Math.round(1.5/hopTime);
+  const detr=new Float32Array(nFrames);
+  for(let i=0;i<nFrames;i++){let s=0,c=0;
+    for(let j=Math.max(0,i-win);j<Math.min(nFrames,i+win);j++){s+=fluxArr[j];c++}
+    detr[i]=Math.max(0,fluxArr[i]-s/c)}
+  let dMean=0;for(let i=0;i<nFrames;i++)dMean+=detr[i];dMean/=nFrames;
+  let dStd=0;for(let i=0;i<nFrames;i++)dStd+=(detr[i]-dMean)**2;dStd=Math.sqrt(dStd/nFrames);
+  const onsetTimes=[];const minGap=Math.round(.1/hopTime);let lastOn=-minGap;
+  for(let i=1;i<nFrames-1;i++){
+    if(detr[i]>dMean+dStd&&detr[i]>=detr[i-1]&&detr[i]>=detr[i+1]&&i-lastOn>=minGap){
+      onsetTimes.push(i*hopTime);lastOn=i}}
+
+  const minLag=Math.max(2,Math.round(60/200/hopTime));
+  const maxLag=Math.round(60/55/hopTime);
+  let bestLag=minLag,bestVal=-Infinity;
+  for(let lag=minLag;lag<=maxLag&&lag<nFrames;lag++){
+    let ac=0;for(let i=0;i+lag<nFrames;i++)ac+=detr[i]*detr[i+lag];
+    const bpmC=60/(lag*hopTime);
+    const w=Math.exp(-.5*((Math.log2(bpmC/120))/0.9)**2);
+    if(ac*w>bestVal){bestVal=ac*w;bestLag=lag}}
+  let bpm=60/(bestLag*hopTime);
+  while(bpm<70)bpm*=2;while(bpm>180)bpm/=2;bpm=Math.round(bpm);
+
+  const P=60/bpm/hopTime;
+  let bestOff=0,bestSum=-Infinity;
+  for(let o=0;o<P;o+=Math.max(1,P/16)){
+    let s=0;for(let k=0;o+k*P<nFrames;k++)s+=detr[Math.floor(o+k*P)];
+    if(s>bestSum){bestSum=s;bestOff=o}}
+  const beatStr=[];
+  for(let k=0;bestOff+k*P<nFrames;k++)beatStr.push(detr[Math.floor(bestOff+k*P)]);
+  const bAC=lag=>{let s=0,c=0;for(let i=0;i+lag<beatStr.length;i++){s+=beatStr[i]*beatStr[i+lag];c++}return c?s/c:0};
+  const ac2=bAC(2),ac3=bAC(3),ac4=bAC(4);
+  let meter="4/4";
+  if(ac3>ac4*1.12&&ac3>ac2*1.12)meter=bpm>140?"6/8":"3/4";
+
+  onProgress(.74);await yieldUI();
+
+  const chromaSum=new Float32Array(12);
+  for(const ch of chromaArr)for(let p=0;p<12;p++)chromaSum[p]+=ch[p];
+  const key=keyFromChroma(chromaSum);
+
+  const fps=Math.round(1/hopTime);
+  const nSec=Math.max(1,Math.floor(nFrames/fps));
+  const secNr=new Float32Array(nSec), secNc=new Float32Array(nSec);
+  const secBands=[], secChroma=[], secMel=new Float32Array(nSec);
+  {
+    const tmp=[];
+    for(let s=0;s<nSec;s++){
+      let r=0,c=0,bE=0,mE=0,hE=0,cnt=0;
+      const ch=new Float32Array(12); const mels=[];
+      for(let f=s*fps;f<Math.min(nFrames,(s+1)*fps);f++){
+        r+=rmsArr[f];c+=centArr[f];cnt++;
+        bE+=bassArr[f];mE+=midArr[f];hE+=highArr[f];
+        if(melArr[f]>0)mels.push(melArr[f]);
+        for(let p=0;p<12;p++)ch[p]+=chromaArr[f][p]}
+      let norm=0;for(let p=0;p<12;p++)norm+=ch[p]*ch[p];norm=Math.sqrt(norm)+1e-12;
+      for(let p=0;p<12;p++)ch[p]/=norm;
+      const tot=bE+mE+hE+1e-12;
+      mels.sort((a,b)=>a-b);
+      secMel[s]=mels.length?mels[Math.floor(mels.length/2)]:0;
+      tmp.push({r:r/cnt,c:c/cnt});
+      secBands.push([bE/tot,mE/tot,hE/tot]);
+      secChroma.push(ch);
+    }
+    const maxR=Math.max(...tmp.map(x=>x.r),1e-9), maxC=Math.max(...tmp.map(x=>x.c),1e-9);
+    for(let s=0;s<nSec;s++){secNr[s]=tmp[s].r/maxR;secNc[s]=tmp[s].c/maxC}
+  }
+
+  const rawChords=[];
+  for(let s=0;s<nSec;s++){
+    let best=null,bs=-1;
+    for(const t of CHORD_TEMPLATES){const sc=cosineSim(secChroma[s],t.v);if(sc>bs){bs=sc;best=t}}
+    rawChords.push(bs>.55?best:null)}
+  for(let t=1;t<rawChords.length-1;t++){
+    const a=rawChords[t-1],b=rawChords[t],c=rawChords[t+1];
+    if(a&&c&&a.label===c.label&&(!b||b.label!==a.label))rawChords[t]=a}
+  const chordRuns=[];
+  for(let t=0;t<rawChords.length;t++){
+    const c=rawChords[t];const last=chordRuns[chordRuns.length-1];
+    if(last&&((c&&last.label===c.label)||(!c&&last.label===null)))last.end=t+1;
+    else chordRuns.push({start:t,end:t+1,label:c?c.label:null,root:c?c.root:-1,minor:c?c.minor:false})}
+  const chords=[];
+  for(const run of chordRuns){
+    if(run.end-run.start<2&&chords.length)chords[chords.length-1].end=run.end;
+    else chords.push(run)}
+
+  const seq=chords.filter(c=>c.label);
+  let progression=null;
+  if(seq.length>=4){
+    const counts={};
+    for(let i=0;i+4<=seq.length;i++){
+      const k=seq.slice(i,i+4).map(c=>c.label).join("–");
+      counts[k]=(counts[k]||0)+1}
+    const top=Object.entries(counts).sort((a,b)=>b[1]-a[1])[0];
+    const chosen=top&&top[1]>=2?top[0]:seq.slice(0,4).map(c=>c.label).join("–");
+    const labels=chosen.split("–");
+    const objs=labels.map(l=>seq.find(c=>c.label===l));
+    const romans=objs.map(c=>romanNumeral(c.root,c.minor,key.root,key.minor));
+    progression={labels:chosen,roman:romans.every(Boolean)?romans.join("–"):null}}
+
+  onProgress(.86);await yieldUI();
+
+  const W=6;let bounds=[0];
+  if(nSec>=20){
+    const novelty=new Float32Array(nSec);
+    const featAt=t=>{const v=[secNr[t]*2,secNc[t]];for(let p=0;p<12;p++)v.push(secChroma[t][p]);return v};
+    for(let t=W;t<nSec-W;t++){
+      const a=new Array(14).fill(0),b=new Array(14).fill(0);
+      for(let j=t-W;j<t;j++){const f=featAt(j);for(let k=0;k<14;k++)a[k]+=f[k]}
+      for(let j=t;j<t+W;j++){const f=featAt(j);for(let k=0;k<14;k++)b[k]+=f[k]}
+      novelty[t]=1-cosineSim(a,b)}
+    let nM=0;for(let t=0;t<nSec;t++)nM+=novelty[t];nM/=nSec;
+    let nS=0;for(let t=0;t<nSec;t++)nS+=(novelty[t]-nM)**2;nS=Math.sqrt(nS/nSec);
+    const thresh=nM+.6*nS;const MIN_SEG=7;
+    for(let t=W;t<nSec-W;t++){
+      if(novelty[t]>thresh&&novelty[t]>=novelty[t-1]&&novelty[t]>=novelty[t+1]){
+        if(t-bounds[bounds.length-1]>=MIN_SEG)bounds.push(t)}}
+    if(nSec-bounds[bounds.length-1]<5&&bounds.length>1)bounds.pop()}
+  bounds.push(nSec);
+
+  const segs=[];
+  for(let i=0;i<bounds.length-1;i++){
+    const s0=bounds[i],s1=bounds[i+1];
+    const q=Math.max(1,Math.floor((s1-s0)/4));
+    let eStart=0,eEnd=0,e=0;
+    const ch=new Float32Array(12);
+    for(let t=s0;t<s1;t++){e+=secNr[t];for(let p=0;p<12;p++)ch[p]+=secChroma[t][p]}
+    for(let t=s0;t<s0+q;t++)eStart+=secNr[t];
+    for(let t=s1-q;t<s1;t++)eEnd+=secNr[t];
+    segs.push({start:s0,end:s1,raw:e/(s1-s0),chroma:ch,rise:eEnd/q-eStart/q})}
+  const eMax=Math.max(...segs.map(s=>s.raw),1e-9);
+  segs.forEach(s=>s.energy=s.raw/eMax);
+
+  const groups=[];
+  segs.forEach((seg,i)=>{
+    let placed=false;
+    for(const g of groups){
+      const ref=segs[g[0]];
+      if(cosineSim(seg.chroma,ref.chroma)>.93&&Math.abs(seg.energy-ref.energy)<.22){g.push(i);placed=true;break}}
+    if(!placed)groups.push([i])});
+  const gE=groups.map(g=>g.reduce((a,i)=>a+segs[i].energy,0)/g.length);
+  let chG=-1,best=-1;
+  groups.forEach((g,gi)=>{const sc=gE[gi]+(g.length>1?.25:0);if(sc>best){best=sc;chG=gi}});
+  let vG=-1,vBest=-1;
+  groups.forEach((g,gi)=>{if(gi===chG)return;
+    const sc=g.length*2+(1-Math.abs(gE[gi]-.6));if(sc>vBest){vBest=sc;vG=gi}});
+  segs.forEach((seg,i)=>{
+    const gi=groups.findIndex(g=>g.includes(i));
+    if(gi===chG)seg.role="chorus";
+    else if(gi===vG)seg.role="verse";
+    else if(seg.energy<.38)seg.role="breakdown";
+    else seg.role="instrumental"});
+  if(segs.length>1&&(segs[0].energy<.55||segs[0].end-segs[0].start<25))segs[0].role="intro";
+  const lastSeg=segs[segs.length-1];
+  if(segs.length>2&&(lastSeg.energy<.6||lastSeg.end-lastSeg.start<25))lastSeg.role="outro";
+  for(let i=1;i<segs.length;i++){
+    if(segs[i].role==="chorus"&&segs[i-1].role!=="chorus"&&segs[i-1].role!=="intro"){
+      if(segs[i-1].rise>.06&&segs[i-1].energy<segs[i].energy)segs[i-1].role="build"}}
+  const midLow=segs.filter((s,i)=>i>0&&i<segs.length-1&&s.role==="breakdown");
+  if(midLow.length===1)midLow[0].role="bridge";
+
+  const globalOnsetRate=onsetTimes.length/(len/sr);
+  const avgBands=[0,1,2].map(b=>secBands.reduce((a,x)=>a+x[b],0)/nSec);
+
+  onProgress(1);
+  const result={
+    duration:len/sr,bpm,meter,key,
+    secNr:Array.from(secNr),secBands,secChroma,secMel:Array.from(secMel),
+    energyCurve:Array.from(secNr),bandCurve:secBands,
+    avgBands,loudCurve,rmsDb,peakDb,crest,dr,
+    stereo:{isStereo,width:stereoWidth,bassMonoRatio},
+    onsetRate:globalOnsetRate,onsetTimes,
+    chords:chords.map(c=>({start:c.start,end:c.end,label:c.label,root:c.root,minor:c.minor})),
+    progression,
+  };
+  const segments=segs.map(s=>({start:s.start,end:s.end,role:s.role}));
+  return{result,segments};
+}
+</script>
+<script>
+"use strict";
+/* ================= SÕNASTIKUD ================= */
+const VOCAB={
+  pop:{label:"Pop / üldine",map:{intro:"Intro",verse:"Verse",prechorus:"Pre-Chorus",chorus:"Chorus",build:"Pre-Chorus",breakdown:"Breakdown",bridge:"Bridge",instrumental:"Instrumental Break",outro:"Outro"},numbered:["Verse","Chorus"]},
+  electronic:{label:"Elektrooniline",map:{intro:"Intro",verse:"Verse",prechorus:"Build-Up",chorus:"Drop",build:"Build-Up",breakdown:"Breakdown",bridge:"Bridge",instrumental:"Groove Section",outro:"Outro"},numbered:["Verse","Drop"]},
+  classical:{label:"Klassika (Opus Machina)",map:{intro:"Intro",verse:"Theme A",prechorus:"Transition",chorus:"Theme B",build:"Crescendo",breakdown:"Adagio Interlude",bridge:"Development",instrumental:"Variation",outro:"Coda"},numbered:[]},
+  jazz:{label:"Jazz (Velvet Machina)",map:{intro:"Intro",verse:"Head",prechorus:"Interlude",chorus:"Solo Section",build:"Trading Fours",breakdown:"Ballad Interlude",bridge:"Bridge",instrumental:"Vamp",outro:"Head Out"},numbered:["Solo Section"]},
+  rock:{label:"Rokk",map:{intro:"Intro",verse:"Verse",prechorus:"Pre-Chorus",chorus:"Chorus",build:"Build-Up",breakdown:"Breakdown",bridge:"Bridge",instrumental:"Guitar Solo",outro:"Outro"},numbered:["Verse","Chorus"]},
+  metal:{label:"Metal",map:{intro:"Intro",verse:"Verse",prechorus:"Pre-Chorus",chorus:"Chorus",build:"Build-Up",breakdown:"Breakdown",bridge:"Bridge",instrumental:"Guitar Solo",outro:"Outro"},numbered:["Verse","Chorus"]},
+  hiphop:{label:"Hip-hop / räpp",map:{intro:"Intro",verse:"Verse",prechorus:"Pre-Hook",chorus:"Hook",build:"Pre-Hook",breakdown:"Beat Break",bridge:"Beat Switch",instrumental:"Instrumental",outro:"Outro"},numbered:["Verse","Hook"]},
+  rnb:{label:"R&B / soul",map:{intro:"Intro",verse:"Verse",prechorus:"Pre-Chorus",chorus:"Chorus",build:"Pre-Chorus",breakdown:"Breakdown",bridge:"Bridge",instrumental:"Vamp",outro:"Outro"},numbered:["Verse","Chorus"]},
+  folk:{label:"Folk / akustiline",map:{intro:"Intro",verse:"Verse",prechorus:"Pre-Chorus",chorus:"Chorus",build:"Rising Verse",breakdown:"Quiet Interlude",bridge:"Bridge",instrumental:"Instrumental Break",outro:"Outro"},numbered:["Verse","Chorus"]},
+  ambient:{label:"Ambient / kino",map:{intro:"Intro",verse:"Movement",prechorus:"Transition",chorus:"Swell",build:"Rising Layers",breakdown:"Stillness",bridge:"Shift",instrumental:"Texture",outro:"Fade Out"},numbered:["Movement","Swell"]},
+};
+const ROLES=["intro","verse","prechorus","chorus","build","breakdown","bridge","instrumental","outro"];
+const ROLE_COLORS={intro:"#7C8698",verse:"#5CA8D8",prechorus:"#8F7FD8",chorus:"#F5A94B",build:"#E07B54",breakdown:"#5FBF98",bridge:"#C878B8",instrumental:"#A8A26B",outro:"#7C8698"};
+const ROLE_LBL={
+  et:{intro:"Sissejuhatus",verse:"Salm",prechorus:"Eelrefrään",chorus:"Refrään / kõrgpunkt",build:"Tõus",breakdown:"Vaibumine",bridge:"Sild",instrumental:"Instrumentaal",outro:"Lõpetus"},
+  en:{intro:"Intro",verse:"Verse",prechorus:"Pre-chorus",chorus:"Chorus / peak",build:"Build-up",breakdown:"Breakdown",bridge:"Bridge",instrumental:"Instrumental",outro:"Outro"},
+};
+const PRESETS={
+  genre:[
+    ["Elektrooniline",["melodic techno","deep house","progressive house","organic house","afro house","melodic house","trance","progressive trance","vocal trance","tribal trance","liquid drum and bass","folk drum and bass","neuro dubstep","future garage","downtempo electronica","nu-disco","synthwave","dark synthwave","EDM","lo-fi house","ambient electronica"]],
+    ["Folk ja hübriidid",["folk","folk pop","indie folk","dream folk","folk ambient","folk trance","electro folk","folktronica","folk rock","folk metal","folk jazz","folk house","folk techno","cinematic folk","Nordic folk","neo-folk","ethno ambient","world fusion"]],
+    ["Pop / rokk",["synth-pop","indie pop","dream pop","folk pop","pop rock","alternative rock","post-rock","classic rock","funk rock","power ballad"]],
+    ["Klassika / kino",["neoclassical","cinematic orchestral","chamber music","solo piano","epic trailer music","baroque","minimalism","cinematic folk"]],
+    ["Jazz / soul",["smooth jazz","jazz fusion","folk jazz","bossa nova","swing","neo-soul","R&B","gospel","blues"]],
+    ["Muu",["singer-songwriter","hip-hop","trap","reggae","latin pop","country","schlager","eurodance","world fusion","ethno ambient"]],
+  ],
+  era:[
+    ["Ajaloolised ajastud",["1920s jazz age","1930s swing era","1940s big band era","1950s rock and roll era","1960s psychedelic era","1970s analog studio sound","1980s synth era","1990s dance era","early 2000s production","late 2000s production"]],
+    ["Kaasaeg aastatega",["2010–2014 modern production","2015–2019 modern production","2020–2022 contemporary production","2023 contemporary production","2024 contemporary production","2025 contemporary production","2026 contemporary production","current 2020s sound"]],
+    ["Ajatu / stiliseeritud",["timeless production","retro-modern hybrid","retro-futuristic","vintage recording character","modern hi-fi production","future-facing production"]],
+  ],
+  instruments:[
+    ["Klahvid / süntesaatorid",["analog synth","warm synth pads","arpeggiated synth","piano","grand piano","Rhodes electric piano","Hammond organ","celesta"]],
+    ["Kitarrid / bass",["acoustic guitar","electric guitar","distorted guitar","slide guitar","808 bass","deep sub bass","slap bass","upright bass"]],
+    ["Rütm",["punchy drums","four-on-the-floor kick","breakbeat drums","brushed drums","drum machine","hand percussion","tabla","orchestral percussion"]],
+    ["Orkester",["lush strings","string quartet","cello","solo violin","brass section","french horn","flute","harp"]],
+    ["Muu",["saxophone","trumpet","accordion","kannel (Estonian zither)","choir","vocal chops","field recordings","music box"]],
+  ],
+  vocals:[
+    ["Naisvokaal",["female airy vocals","female powerful vocals","female intimate vocals","female breathy vocals","female smoky vocals","female soulful vocals","female ethereal vocals","female raspy vocals","female low alto vocals","female bright soprano vocals","female emotional belt","female fragile vocals"]],
+    ["Meesvokaal",["male warm vocals","male raspy vocals","male deep baritone vocals","male low bass vocals","male breathy vocals","male soulful vocals","male powerful tenor vocals","male falsetto vocals","male gritty rock vocals","male spoken-rap vocals","male melancholic vocals"]],
+    ["Ansambel ja tehnikad",["whispered vocals","spoken word","choir vocals","children's choir","duet male and female","layered harmonies","call-and-response vocals","gang vocals","chant vocals","mantra vocals","wordless humming","vocoder vocals","robotic vocals","autotuned vocals","operatic vocals","throat singing","scat singing","vocal chops"]],
+    ["Ilma lauluta",["instrumental (no vocals)"]],
+  ],
+  mood:[["Meeleolu",["melancholic","euphoric","hypnotic","dreamy","nostalgic","dark","uplifting","mysterious","romantic","epic","playful","tense","serene","bittersweet","triumphant","intimate","haunting","energetic"]]],
+};
+const DNA_POOLS={
+  culture:["1930s swing phrasing","Estonian runic-song pulse","archival shortwave radio fragments","Nordic folk ornamentation","industrial work-song rhythm","baroque counterpoint","West African polyrhythmic logic","early electronic tape-music gestures"],
+  space:["recorded in a rusted aircraft hangar","heard across a frozen lake at night","captured in an abandoned radio station","performed inside a concrete service tunnel","recorded in a working timber factory","heard through water and distant metal walls","captured in an empty wooden church","recorded onto a worn magnetic-tape archive"],
+  structure:["linear form with no repeated chorus","a false chorus that dissolves before resolving","two unequal climaxes and a restrained ending","opening with the hook once, never repeating it","slow accumulation followed by an abrupt empty section","mirror form whose ending recalls the opening","an extended instrumental interruption at the emotional peak","asymmetrical sections with one deliberate missing resolution"],
+  human:["subtle human timing drift","uneven dynamics and imperfect transient placement","one exposed acoustic imperfection","micro-tempo fluctuations between sections","restrained vocal cracks and breath noise","slightly unstable analog pitch","unpolished room bleed","deliberately sparse moments with audible silence"],
+  avoid:["generic pop structure","perfect quantization","predictable build-and-drop","mainstream supersaw synth","constant maximum loudness","over-polished vocals","stock cinematic impacts","formulaic uplifting chorus"]
+};
+function pick(a,n=1){const pool=[...a],out=[];while(pool.length&&out.length<n){out.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0])}return out}
+function generateDna(){
+  const level=$("dnaLevel").value;
+  if(level==="off"){App.dna="";renderOutputs();return}
+  const n=level==="radical"?2:1;
+  const parts=[...pick(DNA_POOLS.culture,n),...pick(DNA_POOLS.space,1),...pick(DNA_POOLS.structure,1),...pick(DNA_POOLS.human,n)];
+  const avoid=pick(DNA_POOLS.avoid,level==="balanced"?2:level==="bold"?4:6);
+  App.dna=`creative cross-pollination: ${parts.join(", ")}; avoid: ${avoid.join(", ")}`;
+  renderOutputs()
+}
+function dynamicsDesc(crest,dr){
+  if(crest>=13||dr>=12)return{et:"väga dünaamiline, löövate tippudega",en:"highly dynamic, punchy transients"};
+  if(crest>=9)return{et:"löövad dünaamikad",en:"punchy dynamics"};
+  if(crest>=6)return{et:"kaasaegselt komprimeeritud",en:"modern compressed loudness"};
+  return{et:"tugevalt komprimeeritud, vali master",en:"heavily compressed, loud master"}}
+function spectralDesc(b){
+  if(b[0]>.55)return{et:"bassirõhuline",en:"bass-heavy, deep low end"};
+  if(b[2]>.22)return{et:"hele, õhuline ülemine ots",en:"bright, airy top end"};
+  if(b[0]<.25)return{et:"õhuke madal ots",en:"light low end, mid-focused"};
+  return{et:"tasakaalus spekter",en:"balanced full-range mix"}}
+function stereoDesc(st){
+  if(!st.isStereo)return{et:"mono fail",en:"mono"};
+  return st.width>.45?{et:"lai stereopilt",en:"wide stereo image"}
+    :st.width>.22?{et:"mõõdukas stereolaius",en:"moderate stereo width"}
+    :{et:"kitsas / peaaegu mono",en:"narrow, centered image"}}
+function densityDesc(r){
+  if(r>3)return{et:"tihe arranžeering",en:"dense arrangement"};
+  if(r>1.5)return{et:"keskmise tihedusega groove",en:"steady groove"};
+  return{et:"hõre arranžeering",en:"sparse arrangement"}}
+function segEnergyWord(e){return e>.75?"high energy":e>.4?"mid energy":"low energy"}
+function segDensityWord(r){return r>3?"dense":r>1.5?"steady":"sparse"}
+function segEmotion(seg,keyMinor){
+  let minor=keyMinor;
+  if(seg.chords&&seg.chords.length){
+    const m=seg.chords.filter(c=>c.endsWith("m")).length;
+    minor=m/seg.chords.length>=.5}
+  const e=seg.energy;
+  if(seg.role==="build")return"rising tension";
+  if(seg.role==="breakdown")return minor?"introspective":"dreamy";
+  if(seg.role==="bridge")return minor?"reflective, bittersweet":"reflective, hopeful";
+  if(seg.role==="intro")return minor?"mysterious, atmospheric":"warm, inviting";
+  if(seg.role==="outro")return minor?"wistful, fading":"nostalgic, gentle";
+  if(minor){if(e>.75)return"intense, dramatic";if(e>.4)return"melancholic, yearning";return"somber, intimate"}
+  if(e>.75)return"euphoric, uplifting";
+  if(e>.4)return"hopeful, warm";
+  return"tender, calm"}
+function contourWord(seg,mel){
+  const pts=[];
+  for(let t=seg.start;t<seg.end;t++)if(mel[t]>0)pts.push(mel[t]);
+  if(pts.length<6)return null;
+  const third=Math.floor(pts.length/3);
+  const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
+  const a=avg(pts.slice(0,third)),b=avg(pts.slice(third,2*third)),c=avg(pts.slice(2*third));
+  if(b>a+1&&b>c+1)return"arched melody";
+  if(b<a-1&&b<c-1)return"dipping melody";
+  if(c-a>2)return"ascending melody";
+  if(a-c>2)return"descending melody";
+  return"steady melodic line"}
+
+/* ================= I18N ================= */
+const I18N={
+et:{
+ lead:"Täielik loo lahkamine ja Suno paketikoostaja: struktuur, harmoonia, dünaamika, spekter, stereo, meloodiakontuur — nüüd koos pleieri, lohistatavate piiride, A/B võrdluse, albumirežiimi, MIDI-ekspordi ja promptide raamatukoguga. Kõik selles brauseriaknas, faili kuhugi laadimata.",
+ drop:"Lohista siia mp3 / wav / m4a (võib mitu korraga — albumirežiim) — või klõpsa",
+ decoding:"Dekodeerin heli…",analyzing:"Analüüsin",decodeErr:"Faili ei õnnestunud dekodeerida. Proovi mp3, wav, m4a või ogg vormingut.",
+ tabOv:"Ülevaade",tabSt:"Struktuur",tabHa:"Harmoonia",tabSo:"Heli & dünaamika",tabCp:"Võrdlus / album",tabSu:"Suno pakett",
+ loop:"korda sektsiooni",
+ energyH:"Energiaprofiil ja sektsioonid",energyN:"Klõps graafikul hüppab sinna; klõps alumisel värviribal mängib sektsiooni.",
+ structH:"Sektsioonid — rollid, piirid, poolitamine",
+ structD:"Lohista graafikul piirijooni (käepidemed) sektsioonide nihutamiseks. ▶ mängib sektsiooni, ✂ poolitab keskelt, ⇤ liidab eelmisega. Automaattuvastus on heuristiline; kõrv on lõplik kohtunik.",
+ chordsH:"Akordijärgnevus ajas (maj/min kolmkõlad)",midiBtn:"⬇ MIDI-eksport (akordid .mid)",
+ progH:"Levinuim progressioon",progRel:"suhtes",
+ melodyH:"Meloodiakontuur (hinnang)",melodyN:"Domineeriv helikõrgus 200–1100 Hz vahemikus — kontuuri kuju, mitte täpne noodistus.",
+ segchH:"Akordid, helistikud ja kontuur sektsioonide kaupa",
+ segchN:"Kui sektsiooni helistik erineb loo omast, on tegu modulatsiooniga — see kuvatakse lillalt. Tuvastus on chroma-põhine; keerukamad akordid taandatakse lähimaks kolmkõlaks.",
+ loudH:"Valjuskõver (400 ms RMS) + voogedastuse sihtjooned",
+ loudN:"Sihtjooned: Spotify ≈ −14, Apple Music ≈ −16 (LUFS; siinne mõõt on RMS dBFS ≈ LUFS hinnang). Kui RMS on sihtjoontest kõrgemal, normaliseerib platvorm loo vaiksemaks.",
+ bandH:"Spektraalbalanss ajas",stereoH:"Stereopilt",
+ albumH:"Laaditud lood (albumirežiim)",
+ albumD:"Lisa faile juurde ülemise tsooni kaudu (mitu korraga lubatud). „Ava\" teeb loo aktiivseks — kõik teised sakid näitavad siis seda. Kollasega on märgitud lood, mille valjus erineb albumi keskmisest üle 2 dB.",
+ abH:"A/B võrdlus",abD:"Vali kaks lugu — näiteks originaal ja Suno väljund — ja võrdle mõõdikuid kõrvuti.",
+ fullH:"Täisprompt — sarnase loo retsept",
+ fullD:"Analüüs mõõdab tempot, helistikku, akorde ja karakterit — aga žanri, ajastut, instrumente ja vokaali kuuleb ainult sinu kõrv. Vali rippmenüüst (valik lisandub tekstivälja, mitu valikut kombineeritavad) või kirjuta oma. Žanr käib esimesena, sest Suno kaalub prompti algust kõige tugevamalt.",
+ fullN:"Kleebi Suno style väljale. Struktuur (koos akordidega) läheb eraldi lüürikaväljale — vt allpool.",
+ styleH:"Stiiliprompt — vali komponendid",structoutH:"Struktuur lüürikaväljale",
+ ckCh:"akordid",ckEm:"emotsioonid",ckDe:"kirjeldused",ckTi:"ajatemplid",
+ lyrH:"Laulusõnad — genereeri struktuuri sisse ChatGPT abil",
+ lyrD:"Kahe sammuga: ① tööriist koostab valmis prompti (teema + struktuur + kestused + emotsioonid) — nupp kopeerib prompti ja avab ChatGPT; ② kleebi ChatGPT vastus siia tagasi ja tööriist põimib sõnad automaatselt täissiltide alla.",
+ lyrS1:"① Kirjelda sisu ja kopeeri prompt",lyrS2:"② Kleebi ChatGPT vastus ja põimi",
+ dnaH:"MEELIUM DNA — väldi generilist lõksu",dnaD:"Loo kontrollitud üllatus: ootamatu kultuuriline ristamine, füüsiline heliruum, ebatavaline struktuur ja inimlik ebatäiuslikkus.",dnaAvoid:"Väldi lisaks / Avoid",dnaN:"DNA lisatakse automaatselt Suno täisprompti ja ChatGPT laulusõnade konteksti. Lukustamiseks jäta sama DNA alles; uue variandi saamiseks genereeri uuesti.",generateDna:"Genereeri uus DNA",dnaEmpty:"— genereeri loo loominguline DNA —",
+ libH:"Promptide raamatukogu",saveLib:"＋ Salvesta praegune pakett",
+ copyFull:"Kopeeri täisprompt",copyStyle:"Kopeeri stiiliprompt",copyStruct:"Kopeeri struktuur",
+ copyLyrP:"Kopeeri prompt ja ava ChatGPT",mergeBtn:"Põimi sõnad struktuuri sisse",copyMerged:"Kopeeri sõnad lüürikaväljale",
+ expJson:"⬇ Raport (JSON)",expTxt:"⬇ Raport (tekst)",
+ copied:"Kopeeritud ✓",
+ mTempo:"Tempo",mKey:"Helistik",mDur:"Kestus",mDens:"Tihedus",mCrest:"Dünaamika (crest)",mDR:"Dün. ulatus",mSpec:"Spekter",mStereo:"Stereo",
+ mMeter:"taktimõõt",mSections:"sektsiooni",mShort:"P95–P10 lühiajaline",mBands:"bass/kesk/kõrge",
+ chooseOne:"— vali vähemalt üks komponent —",fillFields:"— täida väljad ja/või vali all komponendid —",
+ open:"Ava",active:"aktiivne",remove:"Eemalda",
+ cName:"Lugu",cDur:"Kestus",cBpm:"BPM",cKey:"Helistik",cRms:"RMS dBFS",cCrest:"Crest",cDr:"DR",cSpec:"B/K/K %",cSecs:"Sekts.",
+ metric:"Mõõdik",delta:"Δ / märkus",
+ libEmpty:"Raamatukogu on tühi — salvesta esimene pakett ülalt.",
+ libVolatile:"Selles keskkonnas püsisalvestus ei tööta — kirjed püsivad ainult selle akna eluea. Ava fail oma arvutis brauseris, et raamatukogu jääks alles.",
+ load:"Lae prompt",del:"Kustuta",
+ modKey:"helistik",
+ structNote:"Sildid kujul [Chorus 1: akordid, karakter, emotsioon] annavad Sunole sektsiooni täisvihjete komplekti.",
+ timesNote:"Ajatemplid on sinu orientiiriks — Sunole kleebi ilma nendeta. ",
+ mergedNote:"Sõnad on põimitud struktuuri sisse — akordid ja emotsioonid siltide sees, read siltide all.",
+ bassMonoOk:"bass on kenasti keskel (monoühilduv).",bassMonoBad:"bass on stereosse laiali — võib mono-esitusel nõrgeneda.",
+ sideMid:"Side/mid suhe",bassSide:"Bassi (<120 Hz) side-osakaal",monoFile:"Fail on mono — stereoanalüüs pole rakendatav.",
+ rmsLbl:"RMS",peakLbl:"tipp",
+},
+en:{
+ lead:"Full track dissection and Suno prompt packager: structure, harmony, dynamics, spectrum, stereo, melody contour — now with a player, draggable boundaries, A/B comparison, album mode, MIDI export and a prompt library. Everything runs in this browser window; nothing is uploaded.",
+ drop:"Drop mp3 / wav / m4a here (multiple allowed — album mode) — or click",
+ decoding:"Decoding audio…",analyzing:"Analyzing",decodeErr:"Could not decode the file. Try mp3, wav, m4a or ogg.",
+ tabOv:"Overview",tabSt:"Structure",tabHa:"Harmony",tabSo:"Sound & dynamics",tabCp:"Compare / album",tabSu:"Suno package",
+ loop:"loop section",
+ energyH:"Energy profile and sections",energyN:"Click the chart to seek; click the colored strip to play a section.",
+ structH:"Sections — roles, boundaries, splitting",
+ structD:"Drag the boundary handles on the chart to move section borders. ▶ plays a section, ✂ splits in half, ⇤ merges with the previous one. Detection is heuristic; your ear is the final judge.",
+ chordsH:"Chord progression over time (maj/min triads)",midiBtn:"⬇ MIDI export (chords .mid)",
+ progH:"Most common progression",progRel:"relative to",
+ melodyH:"Melody contour (estimate)",melodyN:"Dominant pitch in the 200–1100 Hz range — contour shape, not exact transcription.",
+ segchH:"Chords, keys and contour per section",
+ segchN:"If a section's key differs from the track key, that's a modulation — shown in violet. Detection is chroma-based; complex chords collapse to the nearest triad.",
+ loudH:"Loudness curve (400 ms RMS) + streaming targets",
+ loudN:"Targets: Spotify ≈ −14, Apple Music ≈ −16 (LUFS; measured here as RMS dBFS ≈ LUFS estimate). If RMS sits above the targets, platforms will normalize the track down.",
+ bandH:"Spectral balance over time",stereoH:"Stereo image",
+ albumH:"Loaded tracks (album mode)",
+ albumD:"Add more files via the drop zone above (multiple allowed). \"Open\" makes a track active — all other tabs then show it. Tracks whose loudness deviates more than 2 dB from the album mean are flagged.",
+ abH:"A/B comparison",abD:"Pick two tracks — e.g. the original and the Suno output — and compare metrics side by side.",
+ fullH:"Full prompt — recipe for a similar track",
+ fullD:"Analysis measures tempo, key, chords and character — but genre, era, instruments and vocals only your ear can hear. Pick from the dropdowns (selections append to the field, combinable) or type your own. Genre goes first because Suno weighs the start of the prompt most.",
+ fullN:"Paste into Suno's style field. The structure (with chords) goes into the lyrics field — see below.",
+ styleH:"Style prompt — choose components",structoutH:"Structure for the lyrics field",
+ ckCh:"chords",ckEm:"emotions",ckDe:"descriptors",ckTi:"timestamps",
+ lyrH:"Lyrics — generate into the structure with ChatGPT",
+ lyrD:"Two steps: ① the tool builds a ready prompt (theme + structure + durations + emotions) — the button copies the prompt and opens ChatGPT; ② paste ChatGPT's reply back here and the tool weaves the lyrics under the full tags automatically.",
+ lyrS1:"① Describe the content and copy the prompt",lyrS2:"② Paste ChatGPT's reply and weave",
+ dnaH:"MEELIUM DNA — escape the generic trap",dnaD:"Create a controlled surprise: unexpected cultural cross-pollination, a physical sonic space, unusual structure and human imperfection.",dnaAvoid:"Avoid additionally",dnaN:"The DNA is added automatically to the full Suno prompt and the ChatGPT lyrics context. Keep it to lock the result; generate again for a new variant.",generateDna:"Generate new DNA",dnaEmpty:"— generate the track's creative DNA —",
+ libH:"Prompt library",saveLib:"＋ Save current package",
+ copyFull:"Copy full prompt",copyStyle:"Copy style prompt",copyStruct:"Copy structure",
+ copyLyrP:"Copy prompt and open ChatGPT",mergeBtn:"Weave lyrics into structure",copyMerged:"Copy lyrics for the lyrics field",
+ expJson:"⬇ Report (JSON)",expTxt:"⬇ Report (text)",
+ copied:"Copied ✓",
+ mTempo:"Tempo",mKey:"Key",mDur:"Duration",mDens:"Density",mCrest:"Dynamics (crest)",mDR:"Dyn. range",mSpec:"Spectrum",mStereo:"Stereo",
+ mMeter:"meter",mSections:"sections",mShort:"P95–P10 short-term",mBands:"bass/mid/high",
+ chooseOne:"— choose at least one component —",fillFields:"— fill the fields and/or choose components below —",
+ open:"Open",active:"active",remove:"Remove",
+ cName:"Track",cDur:"Dur.",cBpm:"BPM",cKey:"Key",cRms:"RMS dBFS",cCrest:"Crest",cDr:"DR",cSpec:"B/M/H %",cSecs:"Sects",
+ metric:"Metric",delta:"Δ / note",
+ libEmpty:"Library is empty — save your first package above.",
+ libVolatile:"Persistent storage is unavailable in this environment — entries last only while this window is open. Open the file in your own browser to keep the library.",
+ load:"Load prompt",del:"Delete",
+ modKey:"key",
+ structNote:"Tags like [Chorus 1: chords, character, emotion] give Suno the full per-section hint set.",
+ timesNote:"Timestamps are for your reference — paste into Suno without them. ",
+ mergedNote:"Lyrics are woven into the structure — chords and emotions inside the tags, lines beneath them.",
+ bassMonoOk:"bass sits nicely centered (mono-compatible).",bassMonoBad:"bass is spread into the sides — may weaken on mono playback.",
+ sideMid:"Side/mid ratio",bassSide:"Bass (<120 Hz) side share",monoFile:"File is mono — stereo analysis not applicable.",
+ rmsLbl:"RMS",peakLbl:"peak",
+}};
+const App={tracks:[],active:-1,lang:"et",
+  inc:{tempo:true,meter:false,key:true,chords:true,dynamics:false,spectral:false,stereo:false,density:false},
+  manual:{genre:"",era:"",instruments:"",vocals:"",mood:""},
+  genre:"pop",dna:"",cmpA:0,cmpB:1};
+function t(k){return(I18N[App.lang]&&I18N[App.lang][k])||I18N.et[k]||k}
+function cur(){return App.tracks[App.active]||null}
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+function copyText(text,btn){
+  const done=()=>{const o=btn.textContent;btn.textContent=t("copied");setTimeout(()=>btn.textContent=o,1800)};
+  if(navigator.clipboard&&navigator.clipboard.writeText)
+    navigator.clipboard.writeText(text).then(done).catch(fb);
+  else fb();
+  function fb(){const ta=document.createElement("textarea");ta.value=text;
+    document.body.appendChild(ta);ta.select();document.execCommand("copy");
+    document.body.removeChild(ta);done()}}
+function download(blob,name){const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),5000)}
+
+/* ================= SEGMENTIDE ÜMBERARVUTUS ================= */
+function recomputeSegs(T){
+  const R=T.result;
+  T.segments.forEach(s=>{
+    let e=0;for(let x=s.start;x<s.end;x++)e+=R.secNr[x];
+    s.raw=e/Math.max(1,s.end-s.start);
+    s.onsetRate=R.onsetTimes.filter(x=>x>=s.start&&x<s.end).length/Math.max(1,s.end-s.start);
+    const inSeg=R.chords.filter(c=>c.label&&c.start<s.end&&c.end>s.start);
+    const uniq=[];for(const c of inSeg)if(!uniq.length||uniq[uniq.length-1]!==c.label)uniq.push(c.label);
+    s.chords=uniq.slice(0,8);
+    const ch=new Float32Array(12);
+    for(let x=s.start;x<s.end;x++)for(let p=0;p<12;p++)ch[p]+=R.secChroma[x][p];
+    const k=keyFromChroma(ch);
+    s.key=(k.score>.5&&k.root===R.key.root&&k.minor===R.key.minor)?null:(k.score>.5?k:null);
+    s.contour=contourWord(s,R.secMel);
+  });
+  const m=Math.max(...T.segments.map(s=>s.raw),1e-9);
+  T.segments.forEach(s=>s.energy=s.raw/m);
+}
+
+/* ================= PLEIER ================= */
+const Player={ctx:null,src:null,playing:false,offset:0,startedAt:0,loop:null,raf:0};
+function pCtx(){if(!Player.ctx)Player.ctx=new(window.AudioContext||window.webkitAudioContext)();return Player.ctx}
+function curTime(){
+  if(!Player.playing)return Player.offset;
+  let x=Player.offset+(pCtx().currentTime-Player.startedAt);
+  if(Player.loop){const L=Player.loop,len=L.end-L.start;if(x>L.end)x=L.start+((x-L.start)%len)}
+  const T=cur();if(T&&x>T.result.duration)x=T.result.duration;
+  return x}
+function stopSrc(){if(Player.src){try{Player.src.onended=null;Player.src.stop()}catch(e){}Player.src=null}}
+function pausePlay(){const x=curTime();stopSrc();Player.playing=false;Player.offset=x;
+  cancelAnimationFrame(Player.raf);updTransport()}
+function playFrom(x,loopSeg){
+  const T=cur();if(!T||!T.buffer)return;
+  stopSrc();const ctx=pCtx();if(ctx.resume)ctx.resume();
+  const src=ctx.createBufferSource();src.buffer=T.buffer;
+  if(loopSeg){src.loop=true;src.loopStart=loopSeg.start;src.loopEnd=loopSeg.end}
+  src.connect(ctx.destination);src.start(0,x);
+  Player.src=src;Player.playing=true;Player.offset=x;Player.startedAt=ctx.currentTime;
+  Player.loop=loopSeg||null;
+  src.onended=()=>{if(Player.src===src){Player.playing=false;Player.offset=0;updTransport()}};
+  tick();updTransport()}
+function tick(){
+  cancelAnimationFrame(Player.raf);
+  const step=()=>{
+    const T=cur();if(!T)return;
+    const x=curTime();
+    ["ph1","ph2"].forEach(id=>{const el=$(id);if(el)el.setAttribute("x1",x/T.result.duration*1000),el.setAttribute("x2",x/T.result.duration*1000)});
+    $("tTime").textContent=`${fmtTime(x)} / ${fmtTime(T.result.duration)}`;
+    if(Player.playing)Player.raf=requestAnimationFrame(step)};
+  Player.raf=requestAnimationFrame(step)}
+function updTransport(){
+  $("playBtn").textContent=Player.playing?"⏸":"▶";
+  const T=cur();
+  if(T)$("tTime").textContent=`${fmtTime(curTime())} / ${fmtTime(T.result.duration)}`}
+function segAt(x){const T=cur();return T?T.segments.find(s=>x>=s.start&&x<s.end):null}
+
+/* ================= SUNO TEKSTID ================= */
+function buildSections(T){
+  T=T||cur();
+  const vocab=VOCAB[App.genre],counts={};
+  return T.segments.map(seg=>{
+    let tag=vocab.map[seg.role]||seg.role;
+    if(vocab.numbered.includes(tag)){counts[tag]=(counts[tag]||0)+1;tag=`${tag} ${counts[tag]}`}
+    const extras=[];
+    if($("ckChords").checked&&seg.chords&&seg.chords.length)extras.push(seg.chords.slice(0,4).join("–"));
+    if($("ckDesc").checked)extras.push(`${segEnergyWord(seg.energy)}, ${segDensityWord(seg.onsetRate)}`);
+    const emotion=segEmotion(seg,T.result.key.minor);
+    if($("ckEmotions").checked)extras.push(emotion);
+    const fullTag=extras.length?`[${tag}: ${extras.join(", ")}]`:`[${tag}]`;
+    return{tag,fullTag,seg,emotion}})}
+function structureText(){
+  return buildSections().map(s=>{
+    let line=s.fullTag;
+    if($("ckTimes").checked)line+=`  (${fmtTime(s.seg.start)}–${fmtTime(s.seg.end)})`;
+    return line}).join("\n\n")}
+function stylePromptText(){
+  const R=cur().result,parts=[];
+  if(App.inc.tempo)parts.push(`${R.bpm} BPM`);
+  if(App.inc.meter)parts.push(`${R.meter} time`);
+  if(App.inc.key)parts.push(R.key.name);
+  if(App.inc.chords&&R.progression)
+    parts.push(`chord progression ${R.progression.labels}${R.progression.roman?` (${R.progression.roman})`:""}`);
+  if(App.inc.dynamics)parts.push(dynamicsDesc(R.crest,R.dr).en);
+  if(App.inc.spectral)parts.push(spectralDesc(R.avgBands).en);
+  if(App.inc.stereo&&R.stereo.isStereo)parts.push(stereoDesc(R.stereo).en);
+  if(App.inc.density)parts.push(densityDesc(R.onsetRate).en);
+  return parts.join(", ")}
+function fullPromptText(){
+  const m=[App.manual.genre,App.manual.era,App.manual.instruments,App.manual.vocals,App.manual.mood]
+    .map(s=>s.trim()).filter(Boolean);
+  const custom=$("dnaAvoid")?.value.trim();
+  const dna=App.dna+(custom?`${App.dna?"; ":""}avoid additionally: ${custom}`:"");
+  return[...m,stylePromptText(),dna].filter(Boolean).join(", ")}
+function lyricsPromptText(){
+  const T=cur(),secs=buildSections(),lang=$("lyricsLang").value;
+  const meta=[`${T.result.bpm} BPM`,T.result.key.name,App.manual.genre,App.manual.era,App.manual.mood,App.manual.vocals]
+    .map(s=>(s||"").trim()).filter(Boolean).join(", ");
+  const estonianRules=lang.includes("eesti")?`
+- Eesti keeles kirjuta grammatiliselt korrektselt ja loomuliku eesti sõnajärjega.
+- Väldi otsetõlkelist inglise keele mõju, kunstlikke riime, kulunud klišeesid ja põhjendamatut arhailisust.
+- Eelista lauldavaid täishäälikuid, selgeid kujundeid ja lühikesi loomulikke fraase.`:"";
+  return`Kirjuta kvaliteetsed laulusõnad Suno AI lüürikavälja jaoks.
+
+Keel: ${lang}
+Loo sisu ja teema: ${$("lyricsPrompt").value.trim()}
+Muusikaline kontekst: ${meta}
+MEELIUM loominguline DNA: ${App.dna||"ei ole valitud"}${$("dnaAvoid")?.value.trim()?`; väldi lisaks: ${$("dnaAvoid").value.trim()}`:""}
+
+Struktuur (järgi täpselt; kestus ja energiatase on juhiseks ridade arvule ja intensiivsusele, u 1 rida 4–5 sekundi kohta):
+${secs.map(s=>`[${s.tag}] — ${Math.round(s.seg.end-s.seg.start)}s, ${segEnergyWord(s.seg.energy)}, emotsioon: ${s.emotion}, roll: ${s.seg.role}`).join("\n")}
+
+Reeglid:
+- Vasta AINULT laulusõnadega, ilma selgituste, pealkirja või kommentaarideta.
+- Kasuta täpselt neid silte nurksulgudes, täpselt samas järjekorras; ära silte ümber sõnasta.
+- Rollidele intro/outro/instrumental/build/breakdown kirjuta sõnu ainult siis, kui see on loomulik (lühike korduv fraas või huik); muidu jäta sildi alla tühjus.
+- Refrään (chorus/drop) olgu igal kordusel täpselt sama tekstiga.
+- Read olgu lauldavad, rütmilised, tähenduslikud ja loomulikud, mitte sõnasõnaline proosa.${estonianRules}` }
+function mergeLyrics(){
+  const secs=buildSections();
+  const text=$("lyricsResp").value.trim();
+  if(!text)return"";
+  const blocks=text.split(/\[[^\]]*\]/).slice(1).map(s=>s.trim());
+  if(blocks.length===secs.length)
+    return secs.map((s,i)=>s.fullTag+(blocks[i]?"\n"+blocks[i]:"")).join("\n\n");
+  return text}
+</script>
+<script>
+"use strict";
+/* ================= GRAAFIKUD ================= */
+function svgEnergy(withHandles,phId){
+  const T=cur(),R=T.result,W=1000,H=170,c=R.energyCurve,n=c.length;
+  const pts=c.map((v,i)=>`${(i/Math.max(1,n-1))*W},${H-14-v*(H-40)}`).join(" ");
+  let s=`<svg viewBox="0 0 ${W} ${H}" data-dur="${R.duration}" class="${withHandles?"echart drag":"echart"}" xmlns="http://www.w3.org/2000/svg">
+  <defs><linearGradient id="eG${phId}" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0%" stop-color="#F5A94B" stop-opacity=".55"/>
+  <stop offset="100%" stop-color="#F5A94B" stop-opacity=".04"/></linearGradient></defs>`;
+  T.segments.forEach(seg=>{s+=`<rect x="${seg.start/R.duration*W}" y="0" width="${(seg.end-seg.start)/R.duration*W}" height="${H}" fill="${ROLE_COLORS[seg.role]}" opacity=".13"/>`});
+  s+=`<polygon points="0,${H-14} ${pts} ${W},${H-14}" fill="url(#eG${phId})"/>
+  <polyline points="${pts}" fill="none" stroke="#F5A94B" stroke-width="2"/>`;
+  T.segments.forEach((seg,i)=>{s+=`<rect data-playseg="${i}" x="${seg.start/R.duration*W}" y="${H-8}" width="${(seg.end-seg.start)/R.duration*W}" height="8" rx="2" fill="${ROLE_COLORS[seg.role]}" style="cursor:pointer"/>`});
+  T.segments.slice(1).forEach((seg,i)=>{
+    const x=seg.start/R.duration*W;
+    s+=`<line x1="${x}" y1="0" x2="${x}" y2="${H}" stroke="#2A313B" stroke-width="1.5"/>`;
+    if(withHandles)s+=`<rect class="bhandle" data-b="${i}" x="${x-5}" y="0" width="10" height="${H}" fill="transparent"/><rect class="bhandle" data-b="${i}" x="${x-2}" y="${H/2-14}" width="4" height="28" rx="2" fill="#E8E4DA" opacity=".8"/>`});
+  s+=`<line id="${phId}" x1="0" y1="0" x2="0" y2="${H}" stroke="#E8E4DA" stroke-width="1" opacity=".7"/>`;
+  return s+"</svg>"}
+function svgBands(){
+  const R=cur().result,W=1000,H=150,n=R.bandCurve.length;
+  const l0=[],l1=[];
+  for(let i=0;i<n;i++){const b=R.bandCurve[i];l0.push(b[0]);l1.push(b[0]+b[1])}
+  const path=a=>a.map((v,i)=>`${(i/Math.max(1,n-1))*W},${H-v*H}`).join(" ");
+  return`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+  <polygon points="0,${H} ${path(l0)} ${W},${H}" fill="#E07B54" opacity=".75"/>
+  <polygon points="${path(l0)} ${W},${H-l1[n-1]*H} ${path(l1).split(" ").reverse().join(" ")}" fill="#F5A94B" opacity=".6"/>
+  <polygon points="${path(l1)} ${W},0 0,0" fill="#5CC8FF" opacity=".45"/></svg>`}
+function svgLoud(){
+  const R=cur().result,W=1000,H=150,c=R.loudCurve,n=c.length,lo=-50,hi=0;
+  const y=db=>H-((Math.max(lo,Math.min(hi,db))-lo)/(hi-lo))*H;
+  const pts=c.map((v,i)=>`${(i/Math.max(1,n-1))*W},${y(v)}`).join(" ");
+  return`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+  <line x1="0" y1="${y(-14)}" x2="${W}" y2="${y(-14)}" stroke="#5CC8FF" stroke-width="1" stroke-dasharray="3 5"/>
+  <text x="6" y="${y(-14)-4}" style="font-family:var(--mono);font-size:10px;fill:#5CC8FF">Spotify −14</text>
+  <line x1="0" y1="${y(-16)}" x2="${W}" y2="${y(-16)}" stroke="#8F7FD8" stroke-width="1" stroke-dasharray="3 5"/>
+  <text x="6" y="${y(-16)+12}" style="font-family:var(--mono);font-size:10px;fill:#8F7FD8">Apple −16</text>
+  <line x1="0" y1="${y(R.rmsDb)}" x2="${W}" y2="${y(R.rmsDb)}" stroke="#5FBF98" stroke-width="1" stroke-dasharray="6 4"/>
+  <line x1="0" y1="${y(R.peakDb)}" x2="${W}" y2="${y(R.peakDb)}" stroke="#E07B54" stroke-width="1" stroke-dasharray="6 4"/>
+  <polyline points="${pts}" fill="none" stroke="#F5A94B" stroke-width="1.6"/></svg>`}
+function svgChords(){
+  const R=cur().result,W=1000,H=64;
+  let s=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+  R.chords.forEach(c=>{
+    const x=c.start/R.duration*W,w=(c.end-c.start)/R.duration*W;
+    const hue=c.root>=0?(c.root*30)%360:0;
+    s+=`<rect x="${x}" y="8" width="${Math.max(1,w-1)}" height="${H-16}" rx="3" fill="${c.label?`hsl(${hue},45%,${c.minor?38:52}%)`:"#21262E"}" opacity=".85"/>`;
+    if(w>34&&c.label)s+=`<text x="${x+w/2}" y="${H/2+4}" text-anchor="middle" style="font-family:var(--mono);font-size:13px;fill:#0E1116;font-weight:600">${esc(c.label)}</text>`});
+  return s+"</svg>"}
+function svgMelody(){
+  const R=cur().result,W=1000,H=140,mel=R.secMel,n=mel.length;
+  const notes=mel.filter(m=>m>0);
+  if(notes.length<4)return`<div class="note">—</div>`;
+  const lo=Math.min(...notes)-1,hi=Math.max(...notes)+1;
+  const y=m=>H-8-((m-lo)/(hi-lo))*(H-16);
+  let segsStr="",prev=null;
+  for(let i=0;i<n;i++){
+    if(mel[i]>0){
+      const px=(i/Math.max(1,n-1))*W,py=y(mel[i]);
+      if(prev)segsStr+=`<line x1="${prev[0]}" y1="${prev[1]}" x2="${px}" y2="${py}" stroke="#5CC8FF" stroke-width="1.6" opacity=".85"/>`;
+      prev=[px,py]}
+    else prev=null}
+  return`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${segsStr}</svg>`}
+
+function metric(k,v,sub){return`<div class="metric"><div class="eyebrow">${k}</div><div class="v">${v}</div>${sub?`<div class="s">${sub}</div>`:""}</div>`}
+
+/* ================= RENDERDUS ================= */
+function renderAll(){
+  const T=cur();if(!T)return;
+  const R=T.result,L=App.lang;
+  const dyn=dynamicsDesc(R.crest,R.dr),spec=spectralDesc(R.avgBands),
+        ster=stereoDesc(R.stereo),dens=densityDesc(R.onsetRate);
+  $("tName").textContent=T.name;
+  $("metrics1").innerHTML=
+    metric(t("mTempo"),`${R.bpm} BPM`,`${t("mMeter")} ~${R.meter}`)+
+    metric(t("mKey"),R.key.name)+
+    metric(t("mDur"),fmtTime(R.duration),`${T.segments.length} ${t("mSections")}`)+
+    metric(t("mDens"),`${R.onsetRate.toFixed(1)}/s`,dens[L]);
+  $("metrics2").innerHTML=
+    metric(t("mCrest"),`${R.crest.toFixed(1)} dB`,dyn[L])+
+    metric(t("mDR"),`${R.dr.toFixed(1)} dB`,t("mShort"))+
+    metric(t("mSpec"),`${Math.round(R.avgBands[0]*100)}/${Math.round(R.avgBands[1]*100)}/${Math.round(R.avgBands[2]*100)}`,`${t("mBands")} — ${spec[L]}`)+
+    metric(t("mStereo"),R.stereo.isStereo?R.stereo.width.toFixed(2):"mono",ster[L]);
+  $("energyChart1").innerHTML=svgEnergy(false,"ph1");
+  $("energyChart2").innerHTML=svgEnergy(true,"ph2");
+  $("durLabel1").textContent=fmtTime(R.duration);
+  $("durLabel2").textContent=fmtTime(R.duration);
+  $("chordChart").innerHTML=svgChords();
+  $("melodyChart").innerHTML=svgMelody();
+  $("bandChart").innerHTML=svgBands();
+  $("loudChart").innerHTML=svgLoud();
+  $("loudLegend").innerHTML=`<span style="color:var(--mint)">— ${t("rmsLbl")} ${R.rmsDb.toFixed(1)} dBFS</span> · <span style="color:var(--coral)">— ${t("peakLbl")} ${R.peakDb.toFixed(1)} dBFS</span> · crest ${R.crest.toFixed(1)} dB · DR ${R.dr.toFixed(1)} dB — ${dyn[L]}`;
+  $("bandLegend").innerHTML=`<span style="color:var(--coral)">■ &lt;250 Hz</span> <span style="color:var(--amber)">■ 250–4k</span> <span style="color:var(--ice)">■ &gt;4k</span> — ${Math.round(R.avgBands[0]*100)}% / ${Math.round(R.avgBands[1]*100)}% / ${Math.round(R.avgBands[2]*100)}% (${spec[L]})`;
+  $("stereoInfo").innerHTML=R.stereo.isStereo
+    ?`${t("sideMid")} <span style="font-family:var(--mono);color:var(--amber)">${R.stereo.width.toFixed(2)}</span> — ${ster[L]}.
+      ${t("bassSide")} <span style="font-family:var(--mono);color:var(--amber)">${R.stereo.bassMonoRatio.toFixed(2)}</span> — ${R.stereo.bassMonoRatio<.25?t("bassMonoOk"):t("bassMonoBad")}`
+    :`<span style="color:var(--muted)">${t("monoFile")}</span>`;
+  if(R.progression){
+    $("progPanel").innerHTML=`<div class="eyebrow" style="margin-bottom:8px">${t("progH")}</div>
+    <div class="prog">${esc(R.progression.labels)}</div>
+    ${R.progression.roman?`<div class="progsub">${esc(R.progression.roman)} &nbsp;(${esc(R.key.name)} ${t("progRel")})</div>`:""}`;
+    $("progPanel").classList.remove("hidden")}
+  else $("progPanel").classList.add("hidden");
+  renderSegList();renderSegChords();renderTracks();renderCompare();renderIncChecks();renderOutputs();
+  updTransport()}
+function renderSegList(){
+  const T=cur(),lbl=ROLE_LBL[App.lang];
+  $("segList").innerHTML=T.segments.map((seg,i)=>`
+  <div class="segrow">
+    <span class="dot" style="background:${ROLE_COLORS[seg.role]}"></span>
+    <span class="segtime">${fmtTime(seg.start)}–${fmtTime(seg.end)}</span>
+    <button class="mini" data-playsegbtn="${i}" title="Esita">▶</button>
+    <button class="mini" data-split="${i}" title="Poolita">✂</button>
+    ${i>0?`<button class="mini" data-merge="${i}" title="Liida eelmisega">⇤</button>`:""}
+    <select data-seg="${i}" style="flex:1 1 160px">
+      ${ROLES.map(role=>`<option value="${role}" ${role===seg.role?"selected":""}>${lbl[role]} → [${VOCAB[App.genre].map[role]}]</option>`).join("")}
+    </select>
+    <span class="seginfo">${segEnergyWord(seg.energy)} · ${seg.onsetRate.toFixed(1)}/s</span>
+    <div class="ebar"><div style="width:${Math.round(seg.energy*100)}%;background:${ROLE_COLORS[seg.role]}"></div></div>
+  </div>`).join("")}
+function renderSegChords(){
+  const T=cur();
+  $("segChordList").innerHTML=T.segments.map(seg=>`
+  <div class="chordrow">
+    <span class="chordtag" style="color:${ROLE_COLORS[seg.role]}">[${VOCAB[App.genre].map[seg.role]}] ${fmtTime(seg.start)}</span>
+    <span class="chordseq">${seg.chords&&seg.chords.length?esc(seg.chords.join(" – ")):"—"}</span>
+    <span class="chordkey">${seg.key?`⚠ ${t("modKey")}: ${esc(seg.key.name)}`:""}${seg.contour?`${seg.key?" · ":""}${esc(seg.contour)}`:""}</span>
+  </div>`).join("")}
+function renderIncChecks(){
+  const R=cur().result;
+  const dyn=dynamicsDesc(R.crest,R.dr),spec=spectralDesc(R.avgBands),
+        ster=stereoDesc(R.stereo),dens=densityDesc(R.onsetRate);
+  const items=[
+    ["tempo",`${t("mTempo")} (${R.bpm} BPM)`],["meter",`${t("mMeter")} (${R.meter})`],
+    ["key",`${t("mKey")} (${R.key.name})`],
+    ["chords",R.progression?`${App.lang==="et"?"Akordid":"Chords"} (${R.progression.labels})`:(App.lang==="et"?"Akordid (—)":"Chords (—)")],
+    ["dynamics",`${App.lang==="et"?"Dünaamika":"Dynamics"} (${dyn.en})`],
+    ["spectral",`${App.lang==="et"?"Spekter":"Spectrum"} (${spec.en})`],
+    ["stereo",`Stereo (${ster.en})`],
+    ["density",`${t("mDens")} (${dens.en})`]];
+  $("incChecks").innerHTML=items.map(([k,label])=>
+    `<label class="chk" style="color:var(--text)"><input type="checkbox" data-inc="${k}" ${App.inc[k]?"checked":""}> ${esc(label)}</label>`).join("")}
+function renderOutputs(){
+  if(!cur())return;
+  $("styleOut").textContent=stylePromptText()||t("chooseOne");
+  $("fullPromptOut").textContent=fullPromptText()||t("fillFields");
+  $("dnaOut").textContent=App.dna||t("dnaEmpty");
+  $("structOut").textContent=structureText();
+  $("copyLyricsPrompt").disabled=!$("lyricsPrompt").value.trim();
+  $("mergeBtn").disabled=!$("lyricsResp").value.trim()}
+
+/* ================= ALBUM & VÕRDLUS ================= */
+function renderTracks(){
+  const tbl=$("trackTable");
+  if(!App.tracks.length){tbl.innerHTML="";return}
+  const mean=App.tracks.reduce((a,x)=>a+x.result.rmsDb,0)/App.tracks.length;
+  tbl.innerHTML=`<tr><th>${t("cName")}</th><th>${t("cDur")}</th><th>${t("cBpm")}</th><th>${t("cKey")}</th>
+  <th>${t("cRms")}</th><th>${t("cCrest")}</th><th>${t("cDr")}</th><th>${t("cSpec")}</th><th>${t("cSecs")}</th><th></th></tr>`+
+  App.tracks.map((x,i)=>{
+    const R=x.result,dev=Math.abs(R.rmsDb-mean)>2;
+    return`<tr class="trkrow">
+    <td>${i===App.active?`<b style="color:var(--amber)">${esc(x.name)}</b>`:esc(x.name)}</td>
+    <td class="v">${fmtTime(R.duration)}</td><td class="v">${R.bpm}</td><td class="v">${esc(R.key.name)}</td>
+    <td class="v ${dev?"warn":"ok"}">${R.rmsDb.toFixed(1)}</td>
+    <td class="v">${R.crest.toFixed(1)}</td><td class="v">${R.dr.toFixed(1)}</td>
+    <td class="v">${Math.round(R.avgBands[0]*100)}/${Math.round(R.avgBands[1]*100)}/${Math.round(R.avgBands[2]*100)}</td>
+    <td class="v">${x.segments.length}</td>
+    <td>${i===App.active?`<span style="color:var(--amber);font-size:12px">${t("active")}</span>`:`<button class="mini" data-open="${i}">${t("open")}</button>`}
+    ${App.tracks.length>1?`<button class="mini" data-rm="${i}">✕</button>`:""}</td></tr>`}).join("");
+  const opts=App.tracks.map((x,i)=>`<option value="${i}">${esc(x.name)}</option>`).join("");
+  const a=$("cmpA"),b=$("cmpB");
+  a.innerHTML=opts;b.innerHTML=opts;
+  a.value=Math.min(App.cmpA,App.tracks.length-1);
+  b.value=Math.min(App.cmpB,App.tracks.length-1)}
+function renderCompare(){
+  const tbl=$("cmpTable");
+  if(App.tracks.length<2){tbl.innerHTML=`<tr><td style="color:var(--muted);font-size:13px;padding:8px 0">${App.lang==="et"?"Lisa vähemalt kaks lugu võrdluseks.":"Add at least two tracks to compare."}</td></tr>`;return}
+  const A=App.tracks[App.cmpA],B=App.tracks[App.cmpB];
+  if(!A||!B)return;
+  const rows=[];
+  const add=(name,va,vb,delta)=>rows.push(`<tr><td>${name}</td><td class="v">${va}</td><td class="v">${vb}</td><td class="v" style="color:var(--muted)">${delta||""}</td></tr>`);
+  add(t("cBpm"),A.result.bpm,B.result.bpm,`Δ ${Math.abs(A.result.bpm-B.result.bpm)}`);
+  add(t("mMeter"),A.result.meter,B.result.meter,A.result.meter===B.result.meter?"=":"≠");
+  add(t("cKey"),A.result.key.name,B.result.key.name,A.result.key.name===B.result.key.name?"=":"≠");
+  add(t("cDur"),fmtTime(A.result.duration),fmtTime(B.result.duration),`Δ ${Math.abs(Math.round(A.result.duration-B.result.duration))}s`);
+  add(t("cSecs"),A.segments.length,B.segments.length,`Δ ${Math.abs(A.segments.length-B.segments.length)}`);
+  add(t("cRms"),A.result.rmsDb.toFixed(1),B.result.rmsDb.toFixed(1),`Δ ${Math.abs(A.result.rmsDb-B.result.rmsDb).toFixed(1)} dB`);
+  add(t("cCrest"),A.result.crest.toFixed(1),B.result.crest.toFixed(1),`Δ ${Math.abs(A.result.crest-B.result.crest).toFixed(1)} dB`);
+  add(t("cDr"),A.result.dr.toFixed(1),B.result.dr.toFixed(1),`Δ ${Math.abs(A.result.dr-B.result.dr).toFixed(1)} dB`);
+  add(t("cSpec"),A.result.avgBands.map(x=>Math.round(x*100)).join("/"),B.result.avgBands.map(x=>Math.round(x*100)).join("/"),"");
+  add("Stereo",A.result.stereo.width.toFixed(2),B.result.stereo.width.toFixed(2),"");
+  add(t("mDens"),A.result.onsetRate.toFixed(1)+"/s",B.result.onsetRate.toFixed(1)+"/s","");
+  add(App.lang==="et"?"Progressioon":"Progression",A.result.progression?A.result.progression.labels:"—",B.result.progression?B.result.progression.labels:"—","");
+  tbl.innerHTML=`<tr><th>${t("metric")}</th><th>A: ${esc(A.name)}</th><th>B: ${esc(B.name)}</th><th>${t("delta")}</th></tr>`+rows.join("")}
+
+/* ================= MIDI ================= */
+function exportMidi(){
+  const T=cur(),R=T.result;
+  const tpq=480,usPerQ=Math.round(60000000/R.bpm);
+  const vlq=n=>{const b=[n&0x7f];while(n>>=7)b.unshift((n&0x7f)|0x80);return b};
+  const secToTicks=s=>Math.round(s*R.bpm/60*tpq);
+  const track=[0,0xFF,0x51,0x03,(usPerQ>>16)&255,(usPerQ>>8)&255,usPerQ&255];
+  let curT=0;
+  for(const c of R.chords){
+    if(!c.label)continue;
+    const st=secToTicks(c.start),en=secToTicks(c.end);
+    const root=48+c.root,notes=[root,root+(c.minor?3:4),root+7];
+    track.push(...vlq(Math.max(0,st-curT)));curT=st;
+    track.push(0x90,notes[0],80,0,0x90,notes[1],80,0,0x90,notes[2],80);
+    track.push(...vlq(Math.max(0,en-curT)));curT=en;
+    track.push(0x80,notes[0],0,0,0x80,notes[1],0,0,0x80,notes[2],0)}
+  track.push(0,0xFF,0x2F,0);
+  const header=[0x4D,0x54,0x68,0x64,0,0,0,6,0,0,0,1,(tpq>>8)&255,tpq&255];
+  const len=track.length;
+  const trk=[0x4D,0x54,0x72,0x6B,(len>>>24)&255,(len>>16)&255,(len>>8)&255,len&255,...track];
+  download(new Blob([new Uint8Array([...header,...trk])],{type:"audio/midi"}),
+    T.name.replace(/\.[^.]+$/,"")+"-akordid.mid")}
+
+/* ================= RAAMATUKOGU ================= */
+const LIB_KEY="formaMachinaLibrary";
+let memLib=[],storageOk=true;
+function libRead(){
+  try{const raw=localStorage.getItem(LIB_KEY);return raw?JSON.parse(raw):[]}
+  catch(e){storageOk=false;return memLib}}
+function libWrite(list){
+  try{localStorage.setItem(LIB_KEY,JSON.stringify(list));storageOk=true}
+  catch(e){storageOk=false;memLib=list}
+  renderLib()}
+function renderLib(){
+  const list=libRead();
+  $("libNote").classList.toggle("hidden",storageOk);
+  if(!storageOk)$("libNote").textContent=t("libVolatile");
+  $("libList").innerHTML=list.length?list.map((e,i)=>`
+  <div class="libitem">
+    <div class="libmeta">${esc(e.date)} · ${esc(e.file)} · ${e.bpm} BPM · ${esc(e.key)}</div>
+    <div style="font-family:var(--mono);font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(e.fullPrompt)}</div>
+    <div class="row" style="margin-top:8px">
+      <button class="mini" data-libcopy="${i}">${t("load")}</button>
+      <button class="mini" data-libstruct="${i}">${t("copyStruct")}</button>
+      <button class="mini" data-libdel="${i}">${t("del")}</button>
+    </div>
+  </div>`).join(""):`<div class="note" style="margin:0">${t("libEmpty")}</div>`}
+
+/* ================= RAPORT ================= */
+function reportObj(){
+  const T=cur(),R=T.result;
+  return{
+    tool:"Meelium Gene Pro v2.3",file:T.name,analyzedAt:new Date().toISOString(),
+    tempo:R.bpm,meter:R.meter,key:R.key.name,durationSec:Math.round(R.duration),
+    rmsDb:+R.rmsDb.toFixed(1),peakDb:+R.peakDb.toFixed(1),crestDb:+R.crest.toFixed(1),dynamicRangeDb:+R.dr.toFixed(1),
+    spectralBalance:{bass:+R.avgBands[0].toFixed(3),mid:+R.avgBands[1].toFixed(3),high:+R.avgBands[2].toFixed(3)},
+    stereo:R.stereo.isStereo?{width:+R.stereo.width.toFixed(3),bassMonoRatio:+R.stereo.bassMonoRatio.toFixed(3)}:"mono",
+    onsetRate:+R.onsetRate.toFixed(2),
+    progression:R.progression?R.progression.labels:null,
+    progressionRoman:R.progression?R.progression.roman:null,
+    segments:T.segments.map(s=>({start:fmtTime(s.start),end:fmtTime(s.end),role:s.role,
+      energy:+s.energy.toFixed(2),onsetRate:+s.onsetRate.toFixed(1),
+      chords:s.chords,emotion:segEmotion(s,R.key.minor),
+      keyChange:s.key?s.key.name:null,contour:s.contour||null})),
+    prompts:{full:fullPromptText(),style:stylePromptText(),structure:structureText()}}}
+function exportJson(){
+  const o=reportObj();
+  download(new Blob([JSON.stringify(o,null,2)],{type:"application/json"}),
+    cur().name.replace(/\.[^.]+$/,"")+"-raport.json")}
+function exportTxt(){
+  const o=reportObj();
+  const lines=[`MEELIUM GENE PRO v2.3 — ANALÜÜSIRAPORT`,`Fail: ${o.file}`,`Aeg: ${o.analyzedAt}`,``,
+  `Tempo: ${o.tempo} BPM (${o.meter})`,`Helistik: ${o.key}`,`Kestus: ${fmtTime(o.durationSec)}`,
+  `RMS: ${o.rmsDb} dBFS · Tipp: ${o.peakDb} dBFS · Crest: ${o.crestDb} dB · DR: ${o.dynamicRangeDb} dB`,
+  `Spekter (bass/kesk/kõrge): ${Math.round(o.spectralBalance.bass*100)}/${Math.round(o.spectralBalance.mid*100)}/${Math.round(o.spectralBalance.high*100)} %`,
+  `Stereo: ${typeof o.stereo==="string"?o.stereo:"laius "+o.stereo.width+", bassi side "+o.stereo.bassMonoRatio}`,
+  `Onset-tihedus: ${o.onsetRate}/s`,
+  o.progression?`Progressioon: ${o.progression}${o.progressionRoman?" ("+o.progressionRoman+")":""}`:``,``,
+  `SEKTSIOONID:`];
+  o.segments.forEach(s=>lines.push(`  ${s.start}–${s.end}  ${s.role.padEnd(12)} energia ${s.energy}  ${s.chords.join("–")||"—"}  ${s.emotion}${s.keyChange?"  ⚠ "+s.keyChange:""}${s.contour?"  "+s.contour:""}`));
+  lines.push(``,`TÄISPROMPT:`,o.prompts.full||"—",``,`STRUKTUUR:`,o.prompts.structure);
+  download(new Blob([lines.join("\n")],{type:"text/plain"}),
+    cur().name.replace(/\.[^.]+$/,"")+"-raport.txt")}
+</script>
+<script>
+"use strict";
+/* ================= FAILIDE LAADIMINE ================= */
+const drop=$("drop"),fileInput=$("file");
+let dragCnt=0,analyzing=false;
+drop.addEventListener("click",()=>fileInput.click());
+drop.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();fileInput.click()}});
+drop.addEventListener("dragenter",e=>{e.preventDefault();dragCnt++;drop.classList.add("drag")});
+drop.addEventListener("dragleave",e=>{e.preventDefault();if(--dragCnt===0)drop.classList.remove("drag")});
+drop.addEventListener("dragover",e=>e.preventDefault());
+drop.addEventListener("drop",e=>{e.preventDefault();dragCnt=0;drop.classList.remove("drag");
+  addFiles([...(e.dataTransfer.files||[])])});
+fileInput.addEventListener("change",e=>{addFiles([...(e.target.files||[])]);fileInput.value=""});
+
+async function decodeFile(file){
+  const buf=await file.arrayBuffer();
+  const ctx=new(window.AudioContext||window.webkitAudioContext)();
+  const audio=await ctx.decodeAudioData(buf);
+  ctx.close();
+  return audio}
+
+async function addFiles(files){
+  files=files.filter(f=>f&&f.size);
+  if(!files.length||analyzing)return;
+  analyzing=true;
+  $("errTxt").classList.add("hidden");
+  $("progWrap").classList.remove("hidden");
+  const firstNew=App.tracks.length;
+  for(let fi=0;fi<files.length;fi++){
+    const file=files[fi];
+    $("dropHint").textContent=files.length>1?`${file.name} (${fi+1}/${files.length})`:file.name;
+    $("progBar").style.width="2%";
+    $("progTxt").textContent=t("decoding");
+    try{
+      const audio=await decodeFile(file);
+      $("progTxt").textContent=t("analyzing")+"…";
+      const{result,segments}=await analyzeBuffer(audio,p=>{
+        $("progBar").style.width=Math.round(p*100)+"%";
+        $("progTxt").textContent=`${t("analyzing")}… ${Math.round(p*100)}%`});
+      const trk={name:file.name,file,result,segments,buffer:null};
+      recomputeSegs(trk);
+      App.tracks.push(trk);
+      if(App.active<0){setActive(App.tracks.length-1,audio)}
+      else if(App.tracks.length===firstNew+fi+1&&fi===0&&App.active>=0){/* jäta aktiivne alles */}
+    }catch(e){
+      $("errTxt").textContent=`${file.name}: ${t("decodeErr")}`;
+      $("errTxt").classList.remove("hidden")}
+  }
+  analyzing=false;
+  $("progWrap").classList.add("hidden");
+  if(App.active>=0){
+    $("results").classList.remove("hidden");
+    if(App.tracks.length>1&&App.cmpB===App.cmpA)App.cmpB=Math.min(1,App.tracks.length-1);
+    renderAll()}}
+
+async function setActive(idx,decodedBuffer){
+  pausePlay();Player.offset=0;
+  App.tracks.forEach((x,i)=>{if(i!==idx)x.buffer=null});
+  App.active=idx;
+  const T=cur();
+  if(decodedBuffer)T.buffer=decodedBuffer;
+  else if(!T.buffer){
+    try{T.buffer=await decodeFile(T.file)}catch(e){T.buffer=null}}
+  $("results").classList.remove("hidden");
+  renderAll()}
+
+/* ================= PIIRIDE LOHISTAMINE ================= */
+let dragB=null;
+document.addEventListener("pointerdown",e=>{
+  const h=e.target.closest(".bhandle");
+  if(!h)return;
+  const svgEl=h.closest("svg");
+  dragB={idx:+h.dataset.b,svg:svgEl};
+  e.preventDefault()});
+document.addEventListener("pointermove",e=>{
+  if(!dragB)return;
+  const T=cur();if(!T)return;
+  const rect=dragB.svg.getBoundingClientRect();
+  const frac=Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width));
+  const x=Math.round(frac*T.result.duration);
+  const j=dragB.idx; /* piir segmentide j ja j+1 vahel */
+  const lo=T.segments[j].start+3, hi=T.segments[j+1].end-3;
+  const nx=Math.max(lo,Math.min(hi,x));
+  T.segments[j].end=nx;T.segments[j+1].start=nx;
+  $("energyChart2").innerHTML=svgEnergy(true,"ph2")});
+document.addEventListener("pointerup",()=>{
+  if(!dragB)return;
+  dragB=null;
+  const T=cur();recomputeSegs(T);renderAll()});
+
+/* ================= SÜNDMUSED ================= */
+$("tabs").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-tab]");if(!b)return;
+  document.querySelectorAll("#tabs button").forEach(x=>x.classList.toggle("on",x===b));
+  ["overview","structure","harmony","sound","compare","suno"].forEach(x=>
+    $("tab-"+x).classList.toggle("hidden",x!==b.dataset.tab))});
+
+$("playBtn").addEventListener("click",()=>{
+  if(Player.playing)pausePlay();
+  else playFrom(Player.offset||0,$("loopSeg").checked?segAt(Player.offset||0):null)});
+
+document.addEventListener("click",e=>{
+  const T=cur();if(!T)return;
+  const ps=e.target.closest("[data-playseg]");
+  if(ps){const seg=T.segments[+ps.dataset.playseg];
+    playFrom(seg.start,$("loopSeg").checked?seg:null);return}
+  const pb=e.target.closest("[data-playsegbtn]");
+  if(pb){const seg=T.segments[+pb.dataset.playsegbtn];
+    playFrom(seg.start,$("loopSeg").checked?seg:null);return}
+  const sp=e.target.closest("[data-split]");
+  if(sp){const i=+sp.dataset.split,seg=T.segments[i];
+    if(seg.end-seg.start>=8){
+      const mid=Math.round((seg.start+seg.end)/2);
+      T.segments.splice(i+1,0,{start:mid,end:seg.end,role:seg.role});
+      seg.end=mid;recomputeSegs(T);renderAll()}return}
+  const mg=e.target.closest("[data-merge]");
+  if(mg){const i=+mg.dataset.merge;
+    T.segments[i-1].end=T.segments[i].end;
+    T.segments.splice(i,1);recomputeSegs(T);renderAll();return}
+  const op=e.target.closest("[data-open]");
+  if(op){setActive(+op.dataset.open);return}
+  const rm=e.target.closest("[data-rm]");
+  if(rm){const i=+rm.dataset.rm;
+    App.tracks.splice(i,1);
+    if(App.active===i)App.active=-1;
+    else if(App.active>i)App.active--;
+    App.cmpA=0;App.cmpB=Math.min(1,App.tracks.length-1);
+    if(App.active<0&&App.tracks.length)setActive(0);
+    else if(App.tracks.length)renderAll();
+    else $("results").classList.add("hidden");
+    return}
+  const lc=e.target.closest("[data-libcopy]");
+  if(lc){copyText(libRead()[+lc.dataset.libcopy].fullPrompt,lc);return}
+  const ls=e.target.closest("[data-libstruct]");
+  if(ls){copyText(libRead()[+ls.dataset.libstruct].structure,ls);return}
+  const ld=e.target.closest("[data-libdel]");
+  if(ld){const list=libRead();list.splice(+ld.dataset.libdel,1);libWrite(list);return}
+  /* klõps ülevaate graafikul = otsi (mitte ribal, mitte käepidemel) */
+  const svgEl=e.target.closest("#energyChart1 svg");
+  if(svgEl&&!e.target.closest("[data-playseg]")){
+    const rect=svgEl.getBoundingClientRect();
+    const frac=Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width));
+    const x=frac*T.result.duration;
+    if(Player.playing)playFrom(x,$("loopSeg").checked?segAt(x):null);
+    else{Player.offset=x;updTransport();tick()}
+    return}});
+
+document.addEventListener("change",e=>{
+  const el=e.target;
+  const T=cur();
+  if(el.matches("select[data-seg]")&&T){T.segments[+el.dataset.seg].role=el.value;renderAll();return}
+  if(el.matches("input[data-inc]")){App.inc[el.dataset.inc]=el.checked;renderOutputs();return}
+  if(el.matches("select[data-preset]")){
+    const k=el.dataset.preset,v=el.value;el.value="";
+    if(!v)return;
+    const input=document.querySelector(`input[data-manual="${k}"]`);
+    const items=input.value.split(",").map(s=>s.trim()).filter(Boolean);
+    if(!items.includes(v)){items.push(v);input.value=items.join(", ");
+      App.manual[k]=input.value;renderOutputs()}
+    return}
+  if(el.id==="genreSel"){App.genre=el.value;renderAll();return}
+  if(el.id==="dnaLevel"){if(el.value==="off")App.dna="";renderOutputs();return}
+  if(["ckChords","ckEmotions","ckDesc","ckTimes"].includes(el.id)){renderOutputs();return}
+  if(el.id==="cmpA"){App.cmpA=+el.value;renderCompare();return}
+  if(el.id==="cmpB"){App.cmpB=+el.value;renderCompare();return}});
+
+document.addEventListener("input",e=>{
+  const el=e.target;
+  if(el.matches("input[data-manual]")){App.manual[el.dataset.manual]=el.value;renderOutputs();return}
+  if(el.id==="lyricsPrompt"||el.id==="lyricsResp"||el.id==="dnaAvoid"){renderOutputs();return}});
+
+$("generateDna").addEventListener("click",generateDna);
+
+$("copyFull").addEventListener("click",e=>copyText(fullPromptText(),e.target));
+$("copyStyle").addEventListener("click",e=>copyText(stylePromptText(),e.target));
+$("copyStruct").addEventListener("click",e=>copyText(structureText(),e.target));
+$("copyLyricsPrompt").addEventListener("click",e=>{
+  window.open("https://chatgpt.com/","_blank","noopener,noreferrer");
+  copyText(lyricsPromptText(),e.target)});
+$("mergeBtn").addEventListener("click",()=>{
+  const merged=mergeLyrics();if(!merged)return;
+  $("mergedOut").textContent=merged;
+  $("mergedWrap").classList.remove("hidden")});
+$("copyMerged").addEventListener("click",e=>copyText($("mergedOut").textContent,e.target));
+$("midiBtn").addEventListener("click",exportMidi);
+$("expJson").addEventListener("click",exportJson);
+$("expTxt").addEventListener("click",exportTxt);
+$("saveLib").addEventListener("click",()=>{
+  const T=cur();if(!T)return;
+  const list=libRead();
+  list.unshift({date:new Date().toLocaleString(),file:T.name,
+    bpm:T.result.bpm,key:T.result.key.name,
+    fullPrompt:fullPromptText(),structure:structureText()});
+  if(list.length>50)list.pop();
+  libWrite(list)});
+
+/* ================= KEEL ================= */
+function applyLang(){
+  const L=App.lang;
+  $("langBtn").textContent=L==="et"?"EN":"ET";
+  document.documentElement.lang=L;
+  $("i-lead").textContent=t("lead");
+  $("dropHint").textContent=cur()?cur().name:t("drop");
+  $("i-tab-ov").textContent=t("tabOv");$("i-tab-st").textContent=t("tabSt");
+  $("i-tab-ha").textContent=t("tabHa");$("i-tab-so").textContent=t("tabSo");
+  $("i-tab-cp").textContent=t("tabCp");$("i-tab-su").textContent=t("tabSu");
+  $("i-loop").textContent=t("loop");
+  $("i-energy-h").textContent=t("energyH");$("i-energy-n").textContent=t("energyN");
+  $("i-struct-h").textContent=t("structH");$("i-struct-d").textContent=t("structD");
+  $("i-chords-h").textContent=t("chordsH");$("midiBtn").textContent=t("midiBtn");
+  $("i-melody-h").textContent=t("melodyH");$("i-melody-n").textContent=t("melodyN");
+  $("i-segch-h").textContent=t("segchH");$("i-segch-n").textContent=t("segchN");
+  $("i-loud-h").textContent=t("loudH");$("i-loud-n").textContent=t("loudN");
+  $("i-band-h").textContent=t("bandH");$("i-stereo-h").textContent=t("stereoH");
+  $("i-album-h").textContent=t("albumH");$("i-album-d").textContent=t("albumD");
+  $("i-ab-h").textContent=t("abH");$("i-ab-d").textContent=t("abD");
+  $("i-full-h").textContent=t("fullH");$("i-full-d").textContent=t("fullD");$("i-full-n").textContent=t("fullN");
+  $("i-style-h").textContent=t("styleH");$("i-structout-h").textContent=t("structoutH");
+  $("i-ck-ch").textContent=t("ckCh");$("i-ck-em").textContent=t("ckEm");
+  $("i-ck-de").textContent=t("ckDe");$("i-ck-ti").textContent=t("ckTi");
+  $("i-lyr-h").textContent=t("lyrH");$("i-lyr-d").textContent=t("lyrD");
+  $("i-lyr-s1").textContent=t("lyrS1");$("i-lyr-s2").textContent=t("lyrS2");
+  $("i-dna-h").textContent=t("dnaH");$("i-dna-d").textContent=t("dnaD");
+  $("i-dna-avoid").textContent=t("dnaAvoid");$("i-dna-n").textContent=t("dnaN");
+  $("generateDna").textContent=t("generateDna");
+  $("i-lib-h").textContent=t("libH");$("saveLib").textContent=t("saveLib");
+  $("copyFull").textContent=t("copyFull");$("copyStyle").textContent=t("copyStyle");
+  $("copyStruct").textContent=t("copyStruct");$("copyLyricsPrompt").textContent=t("copyLyrP");
+  $("mergeBtn").textContent=t("mergeBtn");$("copyMerged").textContent=t("copyMerged");
+  $("expJson").textContent=t("expJson");$("expTxt").textContent=t("expTxt");
+  renderLib();
+  if(cur())renderAll()}
+$("langBtn").addEventListener("click",()=>{App.lang=App.lang==="et"?"en":"et";applyLang()});
+
+/* ================= INIT ================= */
+function initManualGrid(){
+  const defs=[["genre","Žanr / stiil / Genre"],["era","Ajastu / aastad / Era / Years"],["instruments","Instrumendid / Instruments"],["vocals","Vokaal / Vocals"],["mood","Meeleolu / Mood"]];
+  $("manualGrid").innerHTML=defs.map(([k,label])=>`
+  <div class="cell">
+    <span>${label}</span>
+    <select data-preset="${k}" aria-label="${label}">
+      <option value="">+ …</option>
+      ${PRESETS[k].map(([g,opts])=>`<optgroup label="${esc(g)}">${opts.map(o=>`<option value="${esc(o)}">${esc(o)}</option>`).join("")}</optgroup>`).join("")}
+    </select>
+    <input type="text" data-manual="${k}" placeholder="…">
+  </div>`).join("")}
+function initGenreSel(){
+  $("genreSel").innerHTML=Object.entries(VOCAB).map(([k,v])=>
+    `<option value="${k}" ${k===App.genre?"selected":""}>${esc(v.label)}</option>`).join("")}
+initManualGrid();initGenreSel();renderLib();applyLang();
+</script>
+</body>
+</html>
