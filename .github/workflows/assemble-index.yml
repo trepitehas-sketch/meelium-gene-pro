@@ -1,0 +1,49 @@
+name: Assemble index.html
+
+on:
+  push:
+    paths:
+      - 'source/index.html.gz.b64'
+
+permissions:
+  contents: write
+
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Restore index.html
+        shell: bash
+        run: |
+          base64 --decode source/index.html.gz.b64 | gzip --decompress > index.html
+          echo "297bc0c269fa6c56f1aad64a8d2eff3d73289ac346e8f5ee2a56c01cb3b94444  index.html" | sha256sum --check --strict
+
+      - name: Validate JavaScript blocks
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, subprocess, tempfile
+          html = Path('index.html').read_text(encoding='utf-8')
+          scripts = re.findall(r'<script>(.*?)</script>', html, flags=re.S)
+          assert len(scripts) == 4, f'Expected 4 script blocks, found {len(scripts)}'
+          for i, code in enumerate(scripts, 1):
+              p = Path(tempfile.gettempdir()) / f'meelium-script-{i}.js'
+              p.write_text(code, encoding='utf-8')
+              subprocess.run(['node', '--check', str(p)], check=True)
+          PY
+
+      - name: Commit restored application
+        shell: bash
+        run: |
+          if git diff --quiet -- index.html && git ls-files --error-unmatch index.html >/dev/null 2>&1; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Add Meelium Gene Pro v2 application"
+          git push
