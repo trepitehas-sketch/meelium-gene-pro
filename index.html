@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Meelium Gene Pro v2.3 — mp3 → Suno analüüsipakett</title>
+<title>Meelium Gene Pro v2.4 — mp3 → Suno analüüsipakett</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 :root{
@@ -55,6 +55,20 @@ h1 span{color:var(--amber)}
 select,input[type=text],textarea{background:var(--ink);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px;font-family:inherit}
 select:focus-visible,input:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 textarea{width:100%;line-height:1.5;resize:vertical}
+.multi-select{position:relative}
+.multi-select summary{background:var(--ink);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:38px;user-select:none}
+.multi-select summary::-webkit-details-marker{display:none}
+.multi-select summary::after{content:"⌄";font-size:17px;line-height:1;color:var(--muted);transition:transform .15s ease}
+.multi-select[open] summary{border-color:var(--amber);outline:2px solid color-mix(in srgb,var(--amber) 35%,transparent);outline-offset:2px}
+.multi-select[open] summary::after{transform:rotate(180deg)}
+.multi-menu{position:absolute;z-index:40;top:calc(100% + 6px);left:0;right:0;max-height:360px;overflow:auto;background:var(--panel);border:1px solid var(--amber);border-radius:10px;box-shadow:0 18px 44px rgba(0,0,0,.48);padding:8px}
+.multi-group{padding:5px 4px 3px;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--amber)}
+.multi-option{display:flex;align-items:flex-start;gap:9px;padding:7px 8px;border-radius:6px;color:var(--text);font-size:13px;line-height:1.3;cursor:pointer}
+.multi-option:hover{background:var(--line2)}
+.multi-option input{accent-color:var(--amber);margin:2px 0 0;flex-shrink:0}
+.multi-actions{position:sticky;bottom:-8px;display:flex;justify-content:space-between;gap:8px;margin:7px -8px -8px;padding:8px;background:var(--panel);border-top:1px solid var(--line)}
+.multi-actions button{background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:6px 10px;font:inherit;font-size:12px;cursor:pointer}
+.multi-actions button:last-child{background:var(--amber);color:var(--ink);border-color:var(--amber);font-weight:700}
 pre.out{font-family:var(--mono);font-size:14px;line-height:1.7;background:var(--ink);border:1px solid var(--line);border-radius:10px;padding:16px;white-space:pre-wrap;margin:0;min-height:24px}
 .btn{background:var(--amber);color:var(--ink);border:none;border-radius:8px;padding:10px 18px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit}
 .btn:disabled{opacity:.4;cursor:default}
@@ -101,7 +115,7 @@ header{position:relative}
 
 <header style="margin-bottom:30px">
   <button class="langbtn" id="langBtn">EN</button>
-  <div class="series" style="margin-bottom:10px">Meelium · Gene Pro · v2.3</div>
+  <div class="series" style="margin-bottom:10px">Meelium · Gene Pro · v2.4</div>
   <h1>Meelium Gene <span>Pro</span></h1>
   <p class="lead" id="i-lead">Täielik loo lahkamine ja Suno paketikoostaja: struktuur, harmoonia, dünaamika, spekter,
   stereo, meloodiakontuur — nüüd koos pleieri, lohistatavate piiride, A/B võrdluse, albumirežiimi,
@@ -319,7 +333,7 @@ header{position:relative}
 Analüüs toimub täielikult brauseris — faili ei laadita kuhugi üles. Kõik väärtused on
 spektraalheuristika hinnangud, mitte täppis-MIR: tempo ±2 BPM, helistik ja akordid chroma-põhised,
 valjus RMS dBFS (≈ LUFS), taktimõõt aktsendiperioodi hinnang, meloodiakontuur ligikaudne.
-· Meelium Gene Pro v2.3
+· Meelium Gene Pro v2.4
 </footer>
 </div>
 
@@ -779,8 +793,9 @@ et:{
  albumD:"Lisa faile juurde ülemise tsooni kaudu (mitu korraga lubatud). „Ava\" teeb loo aktiivseks — kõik teised sakid näitavad siis seda. Kollasega on märgitud lood, mille valjus erineb albumi keskmisest üle 2 dB.",
  abH:"A/B võrdlus",abD:"Vali kaks lugu — näiteks originaal ja Suno väljund — ja võrdle mõõdikuid kõrvuti.",
  fullH:"Täisprompt — sarnase loo retsept",
- fullD:"Analüüs mõõdab tempot, helistikku, akorde ja karakterit — aga žanri, ajastut, instrumente ja vokaali kuuleb ainult sinu kõrv. Vali rippmenüüst (valik lisandub tekstivälja, mitu valikut kombineeritavad) või kirjuta oma. Žanr käib esimesena, sest Suno kaalub prompti algust kõige tugevamalt.",
+ fullD:"Analüüs mõõdab tempot, helistikku, akorde ja karakterit — aga žanri, ajastut, instrumente ja vokaali kuuleb ainult sinu kõrv. Märgi rippmenüüs korraga kõik sobivad valikud või kirjuta oma. Žanr käib esimesena, sest Suno kaalub prompti algust kõige tugevamalt.",
  fullN:"Kleebi Suno style väljale. Struktuur (koos akordidega) läheb eraldi lüürikaväljale — vt allpool.",
+ chooseOptions:"＋ Vali…",selectedCount:"valitud",clearSelection:"Tühjenda",doneSelection:"Valmis",
  styleH:"Stiiliprompt — vali komponendid",structoutH:"Struktuur lüürikaväljale",
  ckCh:"akordid",ckEm:"emotsioonid",ckDe:"kirjeldused",ckTi:"ajatemplid",
  lyrH:"Laulusõnad — genereeri struktuuri sisse ChatGPT abil",
@@ -830,8 +845,9 @@ en:{
  albumD:"Add more files via the drop zone above (multiple allowed). \"Open\" makes a track active — all other tabs then show it. Tracks whose loudness deviates more than 2 dB from the album mean are flagged.",
  abH:"A/B comparison",abD:"Pick two tracks — e.g. the original and the Suno output — and compare metrics side by side.",
  fullH:"Full prompt — recipe for a similar track",
- fullD:"Analysis measures tempo, key, chords and character — but genre, era, instruments and vocals only your ear can hear. Pick from the dropdowns (selections append to the field, combinable) or type your own. Genre goes first because Suno weighs the start of the prompt most.",
+ fullD:"Analysis measures tempo, key, chords and character — but genre, era, instruments and vocals only your ear can hear. Check all suitable options in each dropdown at once, or type your own. Genre goes first because Suno weighs the start of the prompt most.",
  fullN:"Paste into Suno's style field. The structure (with chords) goes into the lyrics field — see below.",
+ chooseOptions:"＋ Choose…",selectedCount:"selected",clearSelection:"Clear",doneSelection:"Done",
  styleH:"Style prompt — choose components",structoutH:"Structure for the lyrics field",
  ckCh:"chords",ckEm:"emotions",ckDe:"descriptors",ckTi:"timestamps",
  lyrH:"Lyrics — generate into the structure with ChatGPT",
@@ -1254,7 +1270,7 @@ function renderLib(){
 function reportObj(){
   const T=cur(),R=T.result;
   return{
-    tool:"Meelium Gene Pro v2.3",file:T.name,analyzedAt:new Date().toISOString(),
+    tool:"Meelium Gene Pro v2.4",file:T.name,analyzedAt:new Date().toISOString(),
     tempo:R.bpm,meter:R.meter,key:R.key.name,durationSec:Math.round(R.duration),
     rmsDb:+R.rmsDb.toFixed(1),peakDb:+R.peakDb.toFixed(1),crestDb:+R.crest.toFixed(1),dynamicRangeDb:+R.dr.toFixed(1),
     spectralBalance:{bass:+R.avgBands[0].toFixed(3),mid:+R.avgBands[1].toFixed(3),high:+R.avgBands[2].toFixed(3)},
@@ -1273,7 +1289,7 @@ function exportJson(){
     cur().name.replace(/\.[^.]+$/,"")+"-raport.json")}
 function exportTxt(){
   const o=reportObj();
-  const lines=[`MEELIUM GENE PRO v2.3 — ANALÜÜSIRAPORT`,`Fail: ${o.file}`,`Aeg: ${o.analyzedAt}`,``,
+  const lines=[`MEELIUM GENE PRO v2.4 — ANALÜÜSIRAPORT`,`Fail: ${o.file}`,`Aeg: ${o.analyzedAt}`,``,
   `Tempo: ${o.tempo} BPM (${o.meter})`,`Helistik: ${o.key}`,`Kestus: ${fmtTime(o.durationSec)}`,
   `RMS: ${o.rmsDb} dBFS · Tipp: ${o.peakDb} dBFS · Crest: ${o.crestDb} dB · DR: ${o.dynamicRangeDb} dB`,
   `Spekter (bass/kesk/kõrge): ${Math.round(o.spectralBalance.bass*100)}/${Math.round(o.spectralBalance.mid*100)}/${Math.round(o.spectralBalance.high*100)} %`,
@@ -1438,13 +1454,13 @@ document.addEventListener("change",e=>{
   const T=cur();
   if(el.matches("select[data-seg]")&&T){T.segments[+el.dataset.seg].role=el.value;renderAll();return}
   if(el.matches("input[data-inc]")){App.inc[el.dataset.inc]=el.checked;renderOutputs();return}
-  if(el.matches("select[data-preset]")){
-    const k=el.dataset.preset,v=el.value;el.value="";
-    if(!v)return;
+  if(el.matches("input[data-preset-option]")){
+    const k=el.dataset.presetOption,v=el.value;
     const input=document.querySelector(`input[data-manual="${k}"]`);
-    const items=input.value.split(",").map(s=>s.trim()).filter(Boolean);
-    if(!items.includes(v)){items.push(v);input.value=items.join(", ");
-      App.manual[k]=input.value;renderOutputs()}
+    const items=manualItems(k);
+    const next=el.checked?[...items.filter(x=>x!==v),v]:items.filter(x=>x!==v);
+    input.value=next.join(", ");App.manual[k]=input.value;
+    syncPresetChecks(k);renderOutputs();
     return}
   if(el.id==="genreSel"){App.genre=el.value;renderAll();return}
   if(el.id==="dnaLevel"){if(el.value==="off")App.dna="";renderOutputs();return}
@@ -1454,7 +1470,8 @@ document.addEventListener("change",e=>{
 
 document.addEventListener("input",e=>{
   const el=e.target;
-  if(el.matches("input[data-manual]")){App.manual[el.dataset.manual]=el.value;renderOutputs();return}
+  if(el.matches("input[data-manual]")){
+    const k=el.dataset.manual;App.manual[k]=el.value;syncPresetChecks(k);renderOutputs();return}
   if(el.id==="lyricsPrompt"||el.id==="lyricsResp"||el.id==="dnaAvoid"){renderOutputs();return}});
 
 $("generateDna").addEventListener("click",generateDna);
@@ -1516,22 +1533,61 @@ function applyLang(){
   $("copyStruct").textContent=t("copyStruct");$("copyLyricsPrompt").textContent=t("copyLyrP");
   $("mergeBtn").textContent=t("mergeBtn");$("copyMerged").textContent=t("copyMerged");
   $("expJson").textContent=t("expJson");$("expTxt").textContent=t("expTxt");
-  renderLib();
+  renderLib();updateAllMultiSummaries();
   if(cur())renderAll()}
 $("langBtn").addEventListener("click",()=>{App.lang=App.lang==="et"?"en":"et";applyLang()});
 
 /* ================= INIT ================= */
+function manualItems(k){
+  const input=document.querySelector(`input[data-manual="${k}"]`);
+  return(input?input.value:App.manual[k]||"").split(",").map(s=>s.trim()).filter(Boolean)}
+function presetGroups(k){
+  const seen=new Set();
+  return PRESETS[k].map(([group,options])=>[group,options.filter(option=>{
+    if(seen.has(option))return false;seen.add(option);return true})]).filter(([,options])=>options.length)}
+function updateMultiSummary(k){
+  const box=document.querySelector(`details[data-multi="${k}"]`);if(!box)return;
+  const selected=box.querySelectorAll("input[data-preset-option]:checked").length;
+  const summary=box.querySelector("[data-multi-summary]");
+  summary.textContent=selected?`${selected} ${t("selectedCount")}`:t("chooseOptions");
+  summary.title=manualItems(k).join(", ");
+  box.querySelector("[data-multi-clear]").textContent=t("clearSelection");
+  box.querySelector("[data-multi-done]").textContent=t("doneSelection")}
+function updateAllMultiSummaries(){
+  document.querySelectorAll("details[data-multi]").forEach(box=>updateMultiSummary(box.dataset.multi))}
+function syncPresetChecks(k){
+  const selected=new Set(manualItems(k));
+  document.querySelectorAll(`input[data-preset-option="${k}"]`).forEach(cb=>cb.checked=selected.has(cb.value));
+  updateMultiSummary(k)}
 function initManualGrid(){
   const defs=[["genre","Žanr / stiil / Genre"],["era","Ajastu / aastad / Era / Years"],["instruments","Instrumendid / Instruments"],["vocals","Vokaal / Vocals"],["mood","Meeleolu / Mood"]];
   $("manualGrid").innerHTML=defs.map(([k,label])=>`
   <div class="cell">
     <span>${label}</span>
-    <select data-preset="${k}" aria-label="${label}">
-      <option value="">+ …</option>
-      ${PRESETS[k].map(([g,opts])=>`<optgroup label="${esc(g)}">${opts.map(o=>`<option value="${esc(o)}">${esc(o)}</option>`).join("")}</optgroup>`).join("")}
-    </select>
+    <details class="multi-select" data-multi="${k}">
+      <summary aria-label="${label}"><span data-multi-summary>${t("chooseOptions")}</span></summary>
+      <div class="multi-menu">
+        ${presetGroups(k).map(([g,opts])=>`
+          <div class="multi-group">${esc(g)}</div>
+          ${opts.map(o=>`<label class="multi-option"><input type="checkbox" data-preset-option="${k}" value="${esc(o)}"><span>${esc(o)}</span></label>`).join("")}
+        `).join("")}
+        <div class="multi-actions"><button type="button" data-multi-clear="${k}">${t("clearSelection")}</button><button type="button" data-multi-done="${k}">${t("doneSelection")}</button></div>
+      </div>
+    </details>
     <input type="text" data-manual="${k}" placeholder="…">
-  </div>`).join("")}
+  </div>`).join("");
+  document.querySelectorAll("details[data-multi]").forEach(box=>box.addEventListener("toggle",()=>{
+    if(!box.open)return;
+    document.querySelectorAll("details[data-multi][open]").forEach(other=>{if(other!==box)other.open=false})}));
+  updateAllMultiSummaries()}
+document.addEventListener("click",e=>{
+  const clear=e.target.closest("[data-multi-clear]");
+  if(clear){
+    const k=clear.dataset.multiClear,input=document.querySelector(`input[data-manual="${k}"]`);
+    input.value="";App.manual[k]="";syncPresetChecks(k);renderOutputs();return}
+  const done=e.target.closest("[data-multi-done]");
+  if(done){done.closest("details").open=false;return}
+  if(!e.target.closest("details[data-multi]"))document.querySelectorAll("details[data-multi][open]").forEach(box=>box.open=false)});
 function initGenreSel(){
   $("genreSel").innerHTML=Object.entries(VOCAB).map(([k,v])=>
     `<option value="${k}" ${k===App.genre?"selected":""}>${esc(v.label)}</option>`).join("")}
